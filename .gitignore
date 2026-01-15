@@ -1,17 +1,60 @@
+# =============================================================================
+# befit-gym .gitignore
+# =============================================================================
+
+# Environment files (contain secrets)
+.env
+*.env
+!*.env.example
+!env.example
+
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+venv/
 .venv/
 env/
-
-# Docker & DB
-.env                <-- No subas tus contraseñas y secretos
+ENV/
+*.egg-info/
+.eggs/
+dist/
+build/
 
 # Django
-db.sqlite3          <-- Por si acaso haces pruebas locales fuera de Docker
+db.sqlite3
 media/
 staticfiles/
+*.log
 
-# IDEs
+# Node / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDE / Editor
+.cursor/
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker (production secrets - do not commit)
+docker-compose-prod.yml
+
+# Local testing artifacts
+data.yml
+!data.yml.example
+
+# Temporary files
+*.tmp
+*.temp
