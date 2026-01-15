@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+env/
+
+# Docker & DB
+.env                <-- No subas tus contraseñas y secretos
+
+# Django
+db.sqlite3          <-- Por si acaso haces pruebas locales fuera de Docker
+media/
+staticfiles/
+
+# IDEs
+.vscode/
+.idea/
