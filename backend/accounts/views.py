@@ -14,8 +14,10 @@ from .serializers import (
     PlanSemanalListSerializer,
     EquipamientoSerializer,
     UserEquipmentSelectionSerializer,
+    GenerateRoutineSerializer,
 )
 from .models import Ejercicio, Rutina, PlanSemanal, Equipamiento
+from .services.routine_generator import RoutineGeneratorService
 
 
 class RegisterView(generics.CreateAPIView):
@@ -165,19 +167,83 @@ class UserEquipmentSelectionView(APIView):
                 "nombre"
             )
         )
-        return Response({"equipamientos": selected_ids}, status=status.HTTP_200_OK)
+        return Response({"equipment_ids": selected_ids}, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = UserEquipmentSelectionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        selected_ids = serializer.validated_data["equipamientos"]
+        selected_ids = serializer.validated_data["equipment_ids"]
         request.user.equipamientos_preferidos.set(selected_ids)
 
         return Response(
             {
                 "message": "Selección de equipamientos guardada correctamente",
-                "equipamientos": selected_ids,
+                "equipment_ids": selected_ids,
             },
             status=status.HTTP_200_OK,
         )
+
+
+class GenerateRoutineView(APIView):
+    """
+    Genera una rutina de entrenamiento personalizada usando Gemini AI.
+
+    POST /api/auth/generate-routine/
+    Body: {"dias_semana": 3, "nombre_rutina": "Mi Plan"}
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = GenerateRoutineSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        dias_semana = serializer.validated_data.get("dias_semana", 3)
+        nombre_rutina = serializer.validated_data.get("nombre_rutina", None)
+
+        try:
+            # Inicializar servicio y generar rutina
+            generator = RoutineGeneratorService()
+            result = generator.generate_routine_for_user(
+                user_id=request.user.id,
+                dias_semana=dias_semana,
+                nombre_rutina=nombre_rutina,
+            )
+
+            if result["success"]:
+                return Response(result, status=status.HTTP_201_CREATED)
+            else:
+                return Response(
+                    {"error": result.get("error", "Error desconocido")},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": f"Error interno: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class UserProfileView(APIView):
+    """
+    Obtiene y actualiza el perfil del usuario autenticado.
+
+    GET /api/auth/profile/ - Obtiene datos del usuario
+    PATCH /api/auth/profile/ - Actualiza datos del usuario
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)

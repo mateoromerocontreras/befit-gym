@@ -62,7 +62,7 @@ class EquipmentService {
     async saveEquipmentSelection(selectedIds) {
         try {
             const response = await axios.post(`${API_URL}/user-equipment/`, {
-                equipamientos: selectedIds
+                equipment_ids: selectedIds
             }, {
                 headers: this.getAuthHeader()
             });
@@ -82,7 +82,10 @@ class EquipmentService {
             const response = await axios.get(`${API_URL}/user-equipment/`, {
                 headers: this.getAuthHeader()
             });
-            return Array.isArray(response.data) ? response.data : response.data.equipamientos || [];
+            if (Array.isArray(response.data)) {
+                return response.data;
+            }
+            return response.data.equipment_ids || response.data.equipamientos || [];
         } catch (error) {
             console.error('Error fetching user equipment selection:', error);
             return [];

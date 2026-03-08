@@ -30,6 +30,21 @@ class UserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
+class ObjetivoEntrenamiento(models.TextChoices):
+    PERDER_PESO = "PERDER_PESO", "Perder Peso"
+    GANAR_MASA = "GANAR_MASA", "Ganar Masa Muscular"
+    TONIFICAR = "TONIFICAR", "Tonificar"
+    FUERZA = "FUERZA", "Aumentar Fuerza"
+    RESISTENCIA = "RESISTENCIA", "Mejorar Resistencia"
+    SALUD_GENERAL = "SALUD_GENERAL", "Salud General"
+
+
+class NivelEntrenamiento(models.TextChoices):
+    PRINCIPIANTE = "PRINCIPIANTE", "Principiante"
+    INTERMEDIO = "INTERMEDIO", "Intermedio"
+    AVANZADO = "AVANZADO", "Avanzado"
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     peso = models.DecimalField(
@@ -41,6 +56,21 @@ class User(AbstractBaseUser, PermissionsMixin):
         null=True,
         blank=True,
         help_text="Altura en metros",
+    )
+    edad = models.PositiveIntegerField(
+        null=True, blank=True, help_text="Edad del usuario"
+    )
+    objetivo = models.CharField(
+        max_length=20,
+        choices=ObjetivoEntrenamiento.choices,
+        default=ObjetivoEntrenamiento.SALUD_GENERAL,
+        help_text="Objetivo principal de entrenamiento",
+    )
+    nivel = models.CharField(
+        max_length=20,
+        choices=NivelEntrenamiento.choices,
+        default=NivelEntrenamiento.PRINCIPIANTE,
+        help_text="Nivel de experiencia en entrenamiento",
     )
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

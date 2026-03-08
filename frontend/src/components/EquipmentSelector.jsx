@@ -34,6 +34,11 @@ const EquipmentSelector = ({
     const [expandedCategories, setExpandedCategories] = useState({});
     const [allExpanded, setAllExpanded] = useState(true);
 
+    // Sincronizar selección cuando cambie initialSelected
+    useEffect(() => {
+        setSelected(initialSelected);
+    }, [initialSelected]);
+
     // Inicializar categorías expandidas
     useEffect(() => {
         const categories = ['PESO_LIBRE', 'MAQUINA', 'CARDIO', 'ACCESORIO', 'CALISTENIA'];

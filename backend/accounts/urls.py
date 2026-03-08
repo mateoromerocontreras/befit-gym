@@ -9,6 +9,8 @@ from .views import (
     PlanSemanalViewSet,
     EquipamientoViewSet,
     UserEquipmentSelectionView,
+    GenerateRoutineView,
+    UserProfileView,
 )
 
 # Router para los ViewSets
@@ -23,9 +25,11 @@ urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("login/", LoginView.as_view(), name="login"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("profile/", UserProfileView.as_view(), name="profile"),
     path(
         "user-equipment/", UserEquipmentSelectionView.as_view(), name="user-equipment"
     ),
+    path("generate-routine/", GenerateRoutineView.as_view(), name="generate-routine"),
     # API endpoints (router)
     path("", include(router.urls)),
 ]

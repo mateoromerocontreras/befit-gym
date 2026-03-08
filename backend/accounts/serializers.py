@@ -26,13 +26,23 @@ class EquipamientoSerializer(serializers.ModelSerializer):
 class UserEquipmentSelectionSerializer(serializers.Serializer):
     """Serializer para guardar selección de equipamientos de un usuario."""
 
-    equipamientos = serializers.ListField(
+    equipment_ids = serializers.ListField(
         child=serializers.IntegerField(min_value=1),
         allow_empty=True,
         required=True,
     )
 
-    def validate_equipamientos(self, value):
+    def to_internal_value(self, data):
+        normalized_data = dict(data)
+        # Compatibilidad hacia atrás con payload antiguo
+        if (
+            "equipment_ids" not in normalized_data
+            and "equipamientos" in normalized_data
+        ):
+            normalized_data["equipment_ids"] = normalized_data["equipamientos"]
+        return super().to_internal_value(normalized_data)
+
+    def validate_equipment_ids(self, value):
         # Eliminar duplicados preservando orden
         unique_ids = list(dict.fromkeys(value))
         existing_ids = set(
@@ -50,6 +60,20 @@ class UserEquipmentSelectionSerializer(serializers.Serializer):
             )
 
         return unique_ids
+
+
+class GenerateRoutineSerializer(serializers.Serializer):
+    """Serializer para solicitud de generación de rutina con IA."""
+
+    dias_semana = serializers.IntegerField(
+        min_value=1, max_value=7, default=3, help_text="Número de días de entrenamiento"
+    )
+    nombre_rutina = serializers.CharField(
+        max_length=100,
+        required=False,
+        allow_blank=True,
+        help_text="Nombre personalizado",
+    )
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -82,10 +106,27 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    objetivo_display = serializers.CharField(
+        source="get_objetivo_display", read_only=True
+    )
+    nivel_display = serializers.CharField(source="get_nivel_display", read_only=True)
+
     class Meta:
         model = User
-        fields = ("id", "email", "peso", "altura", "suscripcion_activa", "date_joined")
-        read_only_fields = ("id", "date_joined")
+        fields = (
+            "id",
+            "email",
+            "peso",
+            "altura",
+            "edad",
+            "objetivo",
+            "objetivo_display",
+            "nivel",
+            "nivel_display",
+            "suscripcion_activa",
+            "date_joined",
+        )
+        read_only_fields = ("id", "email", "date_joined")
 
 
 # Serializers para el Plan de Entrenamiento
