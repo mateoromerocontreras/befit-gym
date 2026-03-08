@@ -1,0 +1,258 @@
+[
+    {
+        "model": "accounts.equipamiento",
+        "pk": 1,
+        "fields": {
+            "nombre": "Barra Olímpica",
+            "categoria": "PESO_LIBRE"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 2,
+        "fields": {
+            "nombre": "Barra Z",
+            "categoria": "PESO_LIBRE"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 3,
+        "fields": {
+            "nombre": "Mancuernas",
+            "categoria": "PESO_LIBRE"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 4,
+        "fields": {
+            "nombre": "Pesas Rusas (Kettlebells)",
+            "categoria": "PESO_LIBRE"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 5,
+        "fields": {
+            "nombre": "Discos",
+            "categoria": "PESO_LIBRE"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 6,
+        "fields": {
+            "nombre": "Prensa de Piernas",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 7,
+        "fields": {
+            "nombre": "Máquina de Hack Squat",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 8,
+        "fields": {
+            "nombre": "Rack de Poder",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 9,
+        "fields": {
+            "nombre": "Multiestación",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 10,
+        "fields": {
+            "nombre": "Máquina de Extensión de Cuádriceps",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 11,
+        "fields": {
+            "nombre": "Camilla de Isquios",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 12,
+        "fields": {
+            "nombre": "Smith Machine (Barra Guiada)",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 13,
+        "fields": {
+            "nombre": "Polea Alta",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 14,
+        "fields": {
+            "nombre": "Polea Baja",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 15,
+        "fields": {
+            "nombre": "Cruce de Poleas",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 16,
+        "fields": {
+            "nombre": "Cinta de Correr",
+            "categoria": "CARDIO"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 17,
+        "fields": {
+            "nombre": "Bicicleta Fija",
+            "categoria": "CARDIO"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 18,
+        "fields": {
+            "nombre": "Bicicleta de Spinning",
+            "categoria": "CARDIO"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 19,
+        "fields": {
+            "nombre": "Elíptica",
+            "categoria": "CARDIO"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 20,
+        "fields": {
+            "nombre": "Máquina de Remo",
+            "categoria": "CARDIO"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 21,
+        "fields": {
+            "nombre": "Escaladora (Stairmaster)",
+            "categoria": "CARDIO"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 22,
+        "fields": {
+            "nombre": "Banco Plano",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 23,
+        "fields": {
+            "nombre": "Banco Inclinado",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 24,
+        "fields": {
+            "nombre": "Banco Declinado",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 25,
+        "fields": {
+            "nombre": "Banco Scott",
+            "categoria": "MAQUINA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 26,
+        "fields": {
+            "nombre": "Barra de Dominadas",
+            "categoria": "CALISTENIA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 27,
+        "fields": {
+            "nombre": "Barras Paralelas",
+            "categoria": "CALISTENIA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 28,
+        "fields": {
+            "nombre": "Cajón de Salto",
+            "categoria": "CALISTENIA"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 29,
+        "fields": {
+            "nombre": "TRX",
+            "categoria": "ACCESORIO"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 30,
+        "fields": {
+            "nombre": "Bandas de Resistencia",
+            "categoria": "ACCESORIO"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 31,
+        "fields": {
+            "nombre": "Esterilla/Mat de Yoga",
+            "categoria": "ACCESORIO"
+        }
+    },
+    {
+        "model": "accounts.equipamiento",
+        "pk": 32,
+        "fields": {
+            "nombre": "Fitball",
+            "categoria": "ACCESORIO"
+        }
+    }
+]

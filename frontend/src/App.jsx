@@ -5,6 +5,7 @@ import LandingPage from './components/LandingPage';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
+import EquipmentPage from './components/EquipmentPage';
 import PrivateRoute from './components/PrivateRoute';
 
 function App() {
@@ -20,6 +21,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/equipment"
+            element={
+              <PrivateRoute>
+                <EquipmentPage />
               </PrivateRoute>
             }
           />
