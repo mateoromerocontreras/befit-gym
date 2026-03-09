@@ -1,6 +1,8 @@
 services:
   web:
     build: ./backend
+    env_file:
+      - .env
     command: >
       sh -c "
       until python /code/manage.py migrate --noinput; do

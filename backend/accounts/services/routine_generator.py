@@ -1,7 +1,6 @@
 """AI Routine Generator service powered by Gemini."""
 
 import json
-import os
 from typing import Dict, List, Optional
 from django.conf import settings
 from django.db import transaction
@@ -22,7 +21,7 @@ class RoutineGeneratorService:
 
     def __init__(self):
         """Initialize service and configure Gemini AI."""
-        api_key = os.getenv("GEMINI_API_KEY") or settings.GEMINI_API_KEY
+        api_key = settings.GOOGLE_API_KEY
         if not api_key:
             raise ValueError(
                 _("GEMINI_API_KEY is not configured. ")
@@ -30,7 +29,7 @@ class RoutineGeneratorService:
             )
 
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-1.5-flash")
+        self.model = genai.GenerativeModel(settings.GEMINI_MODEL)
 
     def generate_routine_for_user(
         self,
@@ -63,8 +62,19 @@ class RoutineGeneratorService:
                 training_days=training_days,
             )
 
-            ai_response = self._call_gemini_api(prompt)
-            plan_data = self._parse_ai_response(ai_response)
+            last_parse_error = None
+            plan_data = None
+
+            for attempt in range(3):
+                ai_response = self._call_gemini_api(prompt)
+                try:
+                    plan_data = self._parse_ai_response(ai_response)
+                    break
+                except ValueError as parse_error:
+                    last_parse_error = parse_error
+
+            if plan_data is None and last_parse_error is not None:
+                raise last_parse_error
 
             result = self._create_routine_in_database(
                 user=user,
@@ -200,10 +210,11 @@ Return ONLY the JSON with no extra text."""
             response = self.model.generate_content(
                 prompt,
                 generation_config=genai.types.GenerationConfig(
-                    temperature=0.7,
+                    temperature=0.2,
                     top_p=0.8,
                     top_k=40,
-                    max_output_tokens=2048,
+                    max_output_tokens=4096,
+                    response_mime_type="application/json",
                 ),
             )
 
@@ -224,6 +235,9 @@ Return ONLY the JSON with no extra text."""
                 cleaned = cleaned[:-3]
 
             cleaned = cleaned.strip()
+
+            if "{" in cleaned and "}" in cleaned:
+                cleaned = cleaned[cleaned.find("{") : cleaned.rfind("}") + 1]
 
             data = json.loads(cleaned)
 
@@ -275,7 +289,7 @@ Return ONLY the JSON with no extra text."""
             7: Weekday.SUNDAY,
         }
 
-        WeeklyPlan.objects.filter(user=user, active=True).update(active=False)
+        WeeklyPlan.objects.filter(user=user).delete()
 
         weekly_plan_items = plan_data.get("weekly_plan", plan_data.get("plan_semanal", []))
 
