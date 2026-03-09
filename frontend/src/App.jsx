@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import LandingPage from './components/LandingPage';
 import Login from './components/Login';
 import Register from './components/Register';
+import DebugAuth from './components/DebugAuth';
 import Dashboard from './components/Dashboard';
 import ProfilePage from './components/ProfilePage';
 import EquipmentPage from './components/EquipmentPage';
@@ -18,6 +19,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/debug-auth" element={<DebugAuth />} />
           <Route
             path="/dashboard"
             element={

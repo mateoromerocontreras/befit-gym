@@ -1,260 +1,206 @@
-"""
-Servicio de Generación de Rutinas con IA
-=========================================
-
-Este servicio utiliza Gemini AI para generar planes de entrenamiento personalizados
-basados en el perfil del usuario y el equipamiento disponible.
-
-Autor: Sistema de Entrenamiento Gym App
-"""
+"""AI Routine Generator service powered by Gemini."""
 
 import json
 import os
 from typing import Dict, List, Optional
 from django.conf import settings
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 import google.generativeai as genai
 from accounts.models import (
     User,
-    Ejercicio,
-    Rutina,
-    RutinaEjercicio,
-    PlanSemanal,
-    DiaSemana,
+    Exercise,
+    Routine,
+    RoutineExercise,
+    WeeklyPlan,
+    Weekday,
 )
 
 
 class RoutineGeneratorService:
-    """
-    Servicio para generar rutinas de entrenamiento personalizadas usando Gemini AI.
-
-    Funcionalidades:
-    - Analiza el perfil del usuario (objetivo, nivel, edad)
-    - Filtra ejercicios basados en equipamiento disponible
-    - Genera prompt optimizado para Gemini
-    - Procesa respuesta JSON de la IA
-    - Crea automáticamente Rutina, RutinaEjercicio y PlanSemanal
-    """
+    """Generate personalized routines using Gemini AI."""
 
     def __init__(self):
-        """Inicializa el servicio y configura Gemini AI."""
+        """Initialize service and configure Gemini AI."""
         api_key = os.getenv("GEMINI_API_KEY") or settings.GEMINI_API_KEY
         if not api_key:
             raise ValueError(
-                "GEMINI_API_KEY no configurada. "
-                "Define la variable de entorno o agrégala en settings.py"
+                _("GEMINI_API_KEY is not configured. ")
+                + _("Define the environment variable or add it in settings.py")
             )
 
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel("gemini-1.5-flash")
 
     def generate_routine_for_user(
-        self, user_id: int, dias_semana: int = 3, nombre_rutina: Optional[str] = None
+        self,
+        user_id: int,
+        training_days: int = 3,
+        routine_name: Optional[str] = None,
+        **legacy_kwargs,
     ) -> Dict:
-        """
-        Genera un plan de entrenamiento completo para un usuario.
+        """Generate a complete training plan for a user."""
+        if "dias_semana" in legacy_kwargs and training_days == 3:
+            training_days = legacy_kwargs["dias_semana"]
+        if "nombre_rutina" in legacy_kwargs and not routine_name:
+            routine_name = legacy_kwargs["nombre_rutina"]
 
-        Args:
-            user_id: ID del usuario
-            dias_semana: Número de días de entrenamiento (1-7)
-            nombre_rutina: Nombre personalizado para la rutina (opcional)
-
-        Returns:
-            Dict con información de la rutina generada:
-            {
-                'success': bool,
-                'rutina_id': int,
-                'plan_ids': List[int],
-                'mensaje': str,
-                'ejercicios_count': int
-            }
-
-        Raises:
-            ValueError: Si el usuario no existe o no tiene equipamiento
-            Exception: Si hay error al comunicarse con Gemini
-        """
         try:
-            # 1. Obtener usuario y validar
             user = self._get_user_profile(user_id)
 
-            # 2. Obtener ejercicios disponibles según equipamiento
-            ejercicios_disponibles = self._get_available_exercises(user)
+            available_exercises = self._get_available_exercises(user)
 
-            if not ejercicios_disponibles:
+            if not available_exercises:
                 raise ValueError(
-                    f"Usuario {user.email} no tiene equipamiento configurado. "
-                    "Debe seleccionar equipamiento disponible primero."
+                    _("User %(email)s has no configured equipment. ")
+                    % {"email": user.email}
+                    + _("Select available equipment first.")
                 )
 
-            # 3. Generar prompt para Gemini
             prompt = self._build_prompt(
-                user=user, ejercicios=ejercicios_disponibles, dias_semana=dias_semana
+                user=user,
+                available_exercises=available_exercises,
+                training_days=training_days,
             )
 
-            # 4. Llamar a Gemini AI
             ai_response = self._call_gemini_api(prompt)
-
-            # 5. Parsear respuesta JSON
             plan_data = self._parse_ai_response(ai_response)
 
-            # 6. Crear rutinas y plan semanal en DB
             result = self._create_routine_in_database(
                 user=user,
                 plan_data=plan_data,
-                nombre_rutina=nombre_rutina
-                or f"Plan IA - {user.get_objetivo_display()}",
+                routine_name=routine_name or f"AI Plan - {user.get_goal_display()}",
             )
 
             return {
                 "success": True,
-                "rutina_id": result["rutina_id"],
+                "routine_id": result["routine_id"],
                 "plan_ids": result["plan_ids"],
-                "mensaje": f"Rutina generada exitosamente para {dias_semana} días",
-                "ejercicios_count": result["total_ejercicios"],
+                "message": _("Routine generated successfully for %(days)s days")
+                % {"days": training_days},
+                "exercises_count": result["total_exercises"],
+                # Legacy keys
+                "rutina_id": result["routine_id"],
+                "mensaje": _("Routine generated successfully for %(days)s days")
+                % {"days": training_days},
+                "ejercicios_count": result["total_exercises"],
             }
 
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "mensaje": f"Error al generar rutina: {str(e)}",
+                "message": _("Error generating routine: %(error)s") % {"error": str(e)},
+                "mensaje": _("Error generating routine: %(error)s") % {"error": str(e)},
             }
 
     def _get_user_profile(self, user_id: int) -> User:
-        """Obtiene el perfil completo del usuario."""
+        """Get full user profile."""
         try:
-            user = User.objects.prefetch_related("equipamientos_preferidos").get(
+            user = User.objects.prefetch_related("preferred_equipment").get(
                 id=user_id
             )
             return user
         except User.DoesNotExist:
-            raise ValueError(f"Usuario con ID {user_id} no existe")
+            raise ValueError(_("User with ID %(id)s does not exist") % {"id": user_id})
 
     def _get_available_exercises(self, user: User) -> List[Dict]:
-        """
-        Filtra ejercicios según equipamiento disponible del usuario.
+        """Filter exercises based on user's available equipment."""
+        equipment_ids = user.preferred_equipment.values_list("id", flat=True)
 
-        Returns:
-            Lista de diccionarios con información de ejercicios:
-            [{'id': int, 'nombre': str, 'grupo_muscular': str, 'dificultad': str}, ...]
-        """
-        equipamiento_ids = user.equipamientos_preferidos.values_list("id", flat=True)
-
-        if not equipamiento_ids:
+        if not equipment_ids:
             return []
 
-        # Filtrar ejercicios que usan equipamiento disponible
-        ejercicios = (
-            Ejercicio.objects.filter(equipamientos__id__in=equipamiento_ids)
+        available_exercises = (
+            Exercise.objects.filter(equipment__id__in=equipment_ids)
             .distinct()
-            .values("id", "nombre", "grupo_muscular", "dificultad", "descripcion")
+            .values("id", "name", "muscle_group", "difficulty", "description")
         )
 
-        return list(ejercicios)
+        return list(available_exercises)
 
     def _build_prompt(
-        self, user: User, ejercicios: List[Dict], dias_semana: int
+        self, user: User, available_exercises: List[Dict], training_days: int
     ) -> str:
-        """
-        Construye el prompt optimizado para Gemini AI.
-
-        Incluye:
-        - Contexto del rol (entrenador experto)
-        - Perfil del usuario
-        - Lista estricta de ejercicios disponibles
-        - Formato JSON requerido
-        - Restricciones y reglas
-        """
-        ejercicios_lista = "\n".join(
+        """Build optimized Gemini prompt."""
+        exercise_list = "\n".join(
             [
-                f"- ID: {ej['id']} | Nombre: {ej['nombre']} | "
-                f"Grupo: {ej['grupo_muscular']} | Dificultad: {ej['dificultad']}"
-                for ej in ejercicios
+                f"- ID: {ex['id']} | Name: {ex['name']} | "
+                f"Group: {ex['muscle_group']} | Difficulty: {ex['difficulty']}"
+                for ex in available_exercises
             ]
         )
 
-        # Mapear objetivo a descripción detallada
-        objetivo_map = {
-            "PERDER_PESO": "perder peso y quemar grasa corporal",
-            "GANAR_MASA": "ganar masa muscular y volumen",
-            "TONIFICAR": "tonificar y definir músculos",
-            "FUERZA": "aumentar fuerza máxima",
-            "RESISTENCIA": "mejorar resistencia cardiovascular y muscular",
-            "SALUD_GENERAL": "mantener salud general y fitness",
+        goal_map = {
+            "LOSE_WEIGHT": "lose weight and reduce body fat",
+            "GAIN_MUSCLE": "gain muscle mass and volume",
+            "TONE": "tone and define muscles",
+            "STRENGTH": "increase maximal strength",
+            "ENDURANCE": "improve cardio and muscular endurance",
+            "GENERAL_HEALTH": "maintain general health and fitness",
         }
 
-        objetivo_desc = objetivo_map.get(user.objetivo, "mejorar condición física")
+        goal_description = goal_map.get(user.goal, "improve physical condition")
 
-        prompt = f"""Eres un entrenador personal certificado y experto en programación de ejercicios.
+        prompt = f"""You are a certified personal trainer expert in workout programming.
 
-**PERFIL DEL USUARIO:**
-- Objetivo: {objetivo_desc}
-- Nivel de experiencia: {user.get_nivel_display()}
-- Edad: {user.edad or 'No especificada'}
-- Peso: {user.peso or 'No especificado'} kg
-- Altura: {user.altura or 'No especificada'} m
+**USER PROFILE:**
+- Goal: {goal_description}
+- Experience level: {user.get_level_display()}
+- Age: {user.age or 'Not specified'}
+- Weight: {user.weight or 'Not specified'} kg
+- Height: {user.height or 'Not specified'} m
 
-**EJERCICIOS DISPONIBLES (EQUIPAMIENTO DEL USUARIO):**
-{ejercicios_lista}
+**AVAILABLE EXERCISES (USER EQUIPMENT):**
+{exercise_list}
 
-**TAREA:**
-Genera un plan de entrenamiento para {dias_semana} días por semana.
+**TASK:**
+Generate a training plan for {training_days} days per week.
 
-**REGLAS ESTRICTAS:**
-1. SOLO puedes usar ejercicios de la lista anterior (usando sus IDs exactos)
-2. NO inventes nombres nuevos de ejercicios
-3. Distribuye los ejercicios balanceadamente entre grupos musculares
-4. Para nivel PRINCIPIANTE: 3-4 ejercicios por día, 3 series, 10-12 reps
-5. Para nivel INTERMEDIO: 4-5 ejercicios por día, 3-4 series, 8-12 reps
-6. Para nivel AVANZADO: 5-6 ejercicios por día, 4-5 series, 6-12 reps
-7. Ajusta descansos: Principiante (90s), Intermedio (60s), Avanzado (45s)
-8. Evita trabajar el mismo grupo muscular en días consecutivos
+**STRICT RULES:**
+1. Use ONLY exercises from the list above (exact IDs)
+2. Do NOT invent new exercise names
+3. Balance exercises across muscle groups
+4. BEGINNER: 3-4 exercises/day, 3 sets, 10-12 reps
+5. INTERMEDIATE: 4-5 exercises/day, 3-4 sets, 8-12 reps
+6. ADVANCED: 5-6 exercises/day, 4-5 sets, 6-12 reps
+7. Rest times: Beginner (90s), Intermediate (60s), Advanced (45s)
+8. Avoid training same muscle group on consecutive days
 
-**FORMATO DE RESPUESTA REQUERIDO (JSON válido):**
+**REQUIRED RESPONSE FORMAT (valid JSON):**
 {{
-  "plan_semanal": [
+    "weekly_plan": [
     {{
-      "dia": 1,
-      "nombre_dia": "Día 1 - [Grupos musculares]",
-      "ejercicios": [
+            "day": 1,
+            "day_name": "Day 1 - [Muscle groups]",
+            "exercises": [
         {{
-          "ejercicio_id": 5,
+                    "exercise_id": 5,
           "series": 3,
-          "repeticiones": "12",
-          "descanso_segundos": 60,
-          "orden": 1,
-          "notas": "Breve consejo técnico"
+                    "repetitions": "12",
+                    "rest_seconds": 60,
+                    "order": 1,
+                    "notes": "Short technical tip"
         }}
       ]
     }}
   ],
-  "duracion_estimada_minutos": 45,
-  "nivel_recomendado": "{user.nivel}",
-  "observaciones": "Recomendaciones generales del plan"
+    "estimated_duration_minutes": 45,
+    "recommended_level": "{user.level}",
+    "observations": "General recommendations for the plan"
 }}
 
-Genera ÚNICAMENTE el JSON sin texto adicional."""
+Return ONLY the JSON with no extra text."""
 
         return prompt
 
     def _call_gemini_api(self, prompt: str) -> str:
-        """
-        Realiza la llamada a Gemini AI y retorna la respuesta.
-
-        Args:
-            prompt: Prompt construido para la IA
-
-        Returns:
-            Respuesta en texto de Gemini
-
-        Raises:
-            Exception: Si hay error en la API
-        """
+        """Call Gemini AI and return text response."""
         try:
             response = self.model.generate_content(
                 prompt,
                 generation_config=genai.types.GenerationConfig(
-                    temperature=0.7,  # Balance entre creatividad y consistencia
+                    temperature=0.7,
                     top_p=0.8,
                     top_k=40,
                     max_output_tokens=2048,
@@ -264,25 +210,11 @@ Genera ÚNICAMENTE el JSON sin texto adicional."""
             return response.text
 
         except Exception as e:
-            raise Exception(f"Error al comunicarse con Gemini AI: {str(e)}")
+            raise Exception(_("Error communicating with Gemini AI: %(error)s") % {"error": str(e)})
 
     def _parse_ai_response(self, response_text: str) -> Dict:
-        """
-        Parsea la respuesta de texto de Gemini a JSON.
-
-        Limpia el texto (elimina markdown, espacios, etc.) y valida estructura.
-
-        Args:
-            response_text: Respuesta raw de Gemini
-
-        Returns:
-            Diccionario con plan_semanal parseado
-
-        Raises:
-            ValueError: Si el JSON es inválido o no cumple estructura
-        """
+        """Parse Gemini response into validated JSON."""
         try:
-            # Limpiar markdown code blocks si existen
             cleaned = response_text.strip()
             if cleaned.startswith("```json"):
                 cleaned = cleaned[7:]
@@ -293,137 +225,124 @@ Genera ÚNICAMENTE el JSON sin texto adicional."""
 
             cleaned = cleaned.strip()
 
-            # Parsear JSON
             data = json.loads(cleaned)
 
-            # Validar estructura mínima
-            if "plan_semanal" not in data:
-                raise ValueError("Respuesta de IA no contiene 'plan_semanal'")
+            weekly_plan_key = "weekly_plan" if "weekly_plan" in data else "plan_semanal"
 
-            if not isinstance(data["plan_semanal"], list):
-                raise ValueError("'plan_semanal' debe ser una lista")
+            if weekly_plan_key not in data:
+                raise ValueError(_("AI response does not contain 'weekly_plan'"))
 
-            # Validar cada día
-            for dia_data in data["plan_semanal"]:
-                if "dia" not in dia_data or "ejercicios" not in dia_data:
+            if not isinstance(data[weekly_plan_key], list):
+                raise ValueError(_("'weekly_plan' must be a list"))
+
+            for day_data in data[weekly_plan_key]:
+                day_key = "day" if "day" in day_data else "dia"
+                exercises_key = (
+                    "exercises" if "exercises" in day_data else "ejercicios"
+                )
+                if day_key not in day_data or exercises_key not in day_data:
                     raise ValueError(
-                        f"Día inválido en plan: {dia_data}. "
-                        "Debe tener 'dia' y 'ejercicios'"
+                        _("Invalid day entry in plan: %(day)s") % {"day": day_data}
                     )
 
             return data
 
         except json.JSONDecodeError as e:
-            raise ValueError(f"Respuesta de IA no es JSON válido: {str(e)}")
+            raise ValueError(_("AI response is not valid JSON: %(error)s") % {"error": str(e)})
 
     @transaction.atomic
     def _create_routine_in_database(
-        self, user: User, plan_data: Dict, nombre_rutina: str
+        self, user: User, plan_data: Dict, routine_name: str
     ) -> Dict:
-        """
-        Crea rutinas y planes semanales en la base de datos.
-
-        Usa transacción atómica para garantizar consistencia.
-
-        Args:
-            user: Usuario para quien se crea la rutina
-            plan_data: Datos parseados del plan semanal
-            nombre_rutina: Nombre de la rutina
-
-        Returns:
-            Dict con IDs creados: {'rutina_id': int, 'plan_ids': List[int], 'total_ejercicios': int}
-        """
-        # Crear rutina principal
-        rutina = Rutina.objects.create(
-            nombre=nombre_rutina,
-            descripcion=plan_data.get("observaciones", "Rutina generada por IA"),
-            duracion_minutos=plan_data.get("duracion_estimada_minutos", 60),
-            nivel=user.nivel,
+        """Create routines and weekly plans in database atomically."""
+        routine = Routine.objects.create(
+            name=routine_name,
+            description=plan_data.get("observations", plan_data.get("observaciones", "AI-generated routine")),
+            duration_minutes=plan_data.get("estimated_duration_minutes", plan_data.get("duracion_estimada_minutos", 60)),
+            level=user.level,
         )
 
         plan_ids = []
-        total_ejercicios = 0
+        total_exercises = 0
 
-        # Mapeo de días
-        dia_map = {
-            1: DiaSemana.LUNES,
-            2: DiaSemana.MARTES,
-            3: DiaSemana.MIERCOLES,
-            4: DiaSemana.JUEVES,
-            5: DiaSemana.VIERNES,
-            6: DiaSemana.SABADO,
-            7: DiaSemana.DOMINGO,
+        weekday_map = {
+            1: Weekday.MONDAY,
+            2: Weekday.TUESDAY,
+            3: Weekday.WEDNESDAY,
+            4: Weekday.THURSDAY,
+            5: Weekday.FRIDAY,
+            6: Weekday.SATURDAY,
+            7: Weekday.SUNDAY,
         }
 
-        # Desactivar planes anteriores del usuario
-        PlanSemanal.objects.filter(usuario=user, activo=True).update(activo=False)
+        WeeklyPlan.objects.filter(user=user, active=True).update(active=False)
 
-        # Crear plan para cada día
-        for dia_data in plan_data["plan_semanal"]:
-            dia_num = dia_data["dia"]
-            ejercicios_del_dia = dia_data["ejercicios"]
+        weekly_plan_items = plan_data.get("weekly_plan", plan_data.get("plan_semanal", []))
 
-            # Crear rutina específica para este día
-            rutina_dia = Rutina.objects.create(
-                nombre=dia_data.get("nombre_dia", f"{nombre_rutina} - Día {dia_num}"),
-                descripcion=f"Día {dia_num} del plan generado por IA",
-                duracion_minutos=plan_data.get("duracion_estimada_minutos", 60),
-                nivel=user.nivel,
+        for day_data in weekly_plan_items:
+            day_number = day_data.get("day", day_data.get("dia"))
+            day_exercises = day_data.get("exercises", day_data.get("ejercicios", []))
+
+            day_routine = Routine.objects.create(
+                name=day_data.get("day_name", day_data.get("nombre_dia", f"{routine_name} - Day {day_number}")),
+                description=f"Day {day_number} from AI-generated plan",
+                duration_minutes=plan_data.get("estimated_duration_minutes", plan_data.get("duracion_estimada_minutos", 60)),
+                level=user.level,
             )
 
-            # Agregar ejercicios a la rutina del día
-            for ej_data in ejercicios_del_dia:
+            for exercise_data in day_exercises:
                 try:
-                    ejercicio = Ejercicio.objects.get(id=ej_data["ejercicio_id"])
+                    exercise_id = exercise_data.get("exercise_id", exercise_data.get("ejercicio_id"))
+                    exercise = Exercise.objects.get(id=exercise_id)
 
-                    RutinaEjercicio.objects.create(
-                        rutina=rutina_dia,
-                        ejercicio=ejercicio,
-                        series=ej_data.get("series", 3),
-                        repeticiones=str(ej_data.get("repeticiones", "12")),
-                        descanso_segundos=ej_data.get("descanso_segundos", 60),
-                        orden=ej_data.get("orden", 1),
-                        notas=ej_data.get("notas", ""),
+                    RoutineExercise.objects.create(
+                        routine=day_routine,
+                        exercise=exercise,
+                        series=exercise_data.get("series", 3),
+                        repetitions=str(exercise_data.get("repetitions", exercise_data.get("repeticiones", "12"))),
+                        rest_seconds=exercise_data.get("rest_seconds", exercise_data.get("descanso_segundos", 60)),
+                        order=exercise_data.get("order", exercise_data.get("orden", 1)),
+                        notes=exercise_data.get("notes", exercise_data.get("notas", "")),
                     )
 
-                    total_ejercicios += 1
+                    total_exercises += 1
 
-                except Ejercicio.DoesNotExist:
-                    # Log pero no falla - IA puede haber dado ID inválido
+                except Exercise.DoesNotExist:
                     print(
-                        f"Advertencia: Ejercicio ID {ej_data['ejercicio_id']} no existe"
+                        _("Warning: Exercise ID %(id)s does not exist")
+                        % {"id": exercise_data.get("exercise_id", exercise_data.get("ejercicio_id"))}
                     )
 
-            # Crear plan semanal
-            plan = PlanSemanal.objects.create(
-                usuario=user,
-                rutina=rutina_dia,
-                dia_semana=dia_map.get(dia_num, DiaSemana.LUNES),
-                activo=True,
-                notas=dia_data.get("nombre_dia", ""),
+            plan = WeeklyPlan.objects.create(
+                user=user,
+                routine=day_routine,
+                weekday=weekday_map.get(day_number, Weekday.MONDAY),
+                active=True,
+                notes=day_data.get("day_name", day_data.get("nombre_dia", "")),
             )
 
             plan_ids.append(plan.id)
 
         return {
-            "rutina_id": rutina.id,
+            "routine_id": routine.id,
             "plan_ids": plan_ids,
-            "total_ejercicios": total_ejercicios,
+            "total_exercises": total_exercises,
         }
 
 
-# Función helper para uso directo
 def generate_routine(
-    user_id: int, dias_semana: int = 3, nombre_rutina: Optional[str] = None
+    user_id: int,
+    training_days: int = 3,
+    routine_name: Optional[str] = None,
+    **legacy_kwargs,
 ) -> Dict:
-    """
-    Función de conveniencia para generar rutina.
+    """Convenience function to generate a routine."""
+    if "dias_semana" in legacy_kwargs and training_days == 3:
+        training_days = legacy_kwargs["dias_semana"]
+    if "nombre_rutina" in legacy_kwargs and not routine_name:
+        routine_name = legacy_kwargs["nombre_rutina"]
 
-    Uso:
-        from accounts.services.routine_generator import generate_routine
-        resultado = generate_routine(user_id=1, dias_semana=4)
-    """
     service = RoutineGeneratorService()
     return service.generate_routine_for_user(
-        user_id=user_id, dias_semana=dias_semana, nombre_rutina=nombre_rutina
+        user_id=user_id, training_days=training_days, routine_name=routine_name
     )

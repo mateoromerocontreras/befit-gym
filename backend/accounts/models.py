@@ -30,56 +30,56 @@ class UserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
-class ObjetivoEntrenamiento(models.TextChoices):
-    PERDER_PESO = "PERDER_PESO", "Perder Peso"
-    GANAR_MASA = "GANAR_MASA", "Ganar Masa Muscular"
-    TONIFICAR = "TONIFICAR", "Tonificar"
-    FUERZA = "FUERZA", "Aumentar Fuerza"
-    RESISTENCIA = "RESISTENCIA", "Mejorar Resistencia"
-    SALUD_GENERAL = "SALUD_GENERAL", "Salud General"
+class TrainingGoal(models.TextChoices):
+    LOSE_WEIGHT = "LOSE_WEIGHT", "Lose Weight"
+    GAIN_MUSCLE = "GAIN_MUSCLE", "Gain Muscle"
+    TONE = "TONE", "Tone"
+    STRENGTH = "STRENGTH", "Increase Strength"
+    ENDURANCE = "ENDURANCE", "Improve Endurance"
+    GENERAL_HEALTH = "GENERAL_HEALTH", "General Health"
 
 
-class NivelEntrenamiento(models.TextChoices):
-    PRINCIPIANTE = "PRINCIPIANTE", "Principiante"
-    INTERMEDIO = "INTERMEDIO", "Intermedio"
-    AVANZADO = "AVANZADO", "Avanzado"
+class TrainingLevel(models.TextChoices):
+    BEGINNER = "BEGINNER", "Beginner"
+    INTERMEDIATE = "INTERMEDIATE", "Intermediate"
+    ADVANCED = "ADVANCED", "Advanced"
 
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
-    peso = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True, blank=True, help_text="Peso en kg"
+    weight = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True, help_text="Weight in kg"
     )
-    altura = models.DecimalField(
+    height = models.DecimalField(
         max_digits=4,
         decimal_places=2,
         null=True,
         blank=True,
-        help_text="Altura en metros",
+        help_text="Height in meters",
     )
-    edad = models.PositiveIntegerField(
-        null=True, blank=True, help_text="Edad del usuario"
+    age = models.PositiveIntegerField(
+        null=True, blank=True, help_text="User age"
     )
-    objetivo = models.CharField(
+    goal = models.CharField(
         max_length=20,
-        choices=ObjetivoEntrenamiento.choices,
-        default=ObjetivoEntrenamiento.SALUD_GENERAL,
-        help_text="Objetivo principal de entrenamiento",
+        choices=TrainingGoal.choices,
+        default=TrainingGoal.GENERAL_HEALTH,
+        help_text="Primary training goal",
     )
-    nivel = models.CharField(
+    level = models.CharField(
         max_length=20,
-        choices=NivelEntrenamiento.choices,
-        default=NivelEntrenamiento.PRINCIPIANTE,
-        help_text="Nivel de experiencia en entrenamiento",
+        choices=TrainingLevel.choices,
+        default=TrainingLevel.BEGINNER,
+        help_text="Training experience level",
     )
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    suscripcion_activa = models.BooleanField(
-        default=False, help_text="Indica si el socio tiene membresía activa"
+    active_subscription = models.BooleanField(
+        default=False, help_text="Indicates if the member has an active subscription"
     )
-    equipamientos_preferidos = models.ManyToManyField(
-        "Equipamiento",
-        related_name="usuarios_con_preferencia",
+    preferred_equipment = models.ManyToManyField(
+        "Equipment",
+        related_name="users_with_preference",
         blank=True,
     )
     date_joined = models.DateTimeField(default=timezone.now)
@@ -93,158 +93,169 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
-class GrupoMuscular(models.TextChoices):
-    PECHO = "PECHO", "Pecho"
-    ESPALDA = "ESPALDA", "Espalda"
-    HOMBROS = "HOMBROS", "Hombros"
-    BICEPS = "BICEPS", "Bíceps"
-    TRICEPS = "TRICEPS", "Tríceps"
-    PIERNAS = "PIERNAS", "Piernas"
-    GLUTEOS = "GLUTEOS", "Glúteos"
-    ABDOMEN = "ABDOMEN", "Abdomen"
-    CARDIO = "CARDIO", "Cardio"
+class MuscleGroup(models.TextChoices):
+    CHEST = "CHEST", "Chest"
+    BACK = "BACK", "Back"
+    LEGS = "LEGS", "Legs"
+    SHOULDERS = "SHOULDERS", "Shoulders"
+    ARMS = "ARMS", "Arms"
+    CORE = "CORE", "Core"
     FULL_BODY = "FULL_BODY", "Full Body"
 
 
-class DificultadEjercicio(models.TextChoices):
-    PRINCIPIANTE = "PRINCIPIANTE", "Principiante"
-    INTERMEDIO = "INTERMEDIO", "Intermedio"
-    AVANZADO = "AVANZADO", "Avanzado"
+class ExerciseDifficulty(models.TextChoices):
+    BEGINNER = "BEGINNER", "Beginner"
+    INTERMEDIATE = "INTERMEDIATE", "Intermediate"
+    ADVANCED = "ADVANCED", "Advanced"
 
 
-class CategoriaEquipamiento(models.TextChoices):
-    PESO_LIBRE = "PESO_LIBRE", "Peso Libre"
-    MAQUINA = "MAQUINA", "Máquina"
+class EquipmentCategory(models.TextChoices):
+    WEIGHTS = "WEIGHTS", "Weights"
+    MACHINE = "MACHINE", "Machine"
     CARDIO = "CARDIO", "Cardio"
-    ACCESORIO = "ACCESORIO", "Accesorio"
-    CALISTENIA = "CALISTENIA", "Calistenia"
+    ACCESSORY = "ACCESSORY", "Accessory"
+    CALISTHENICS = "CALISTHENICS", "Calisthenics"
 
 
-class Equipamiento(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    categoria = models.CharField(
+class Equipment(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    category = models.CharField(
         max_length=20,
-        choices=CategoriaEquipamiento.choices,
-        default=CategoriaEquipamiento.ACCESORIO,
+        choices=EquipmentCategory.choices,
+        default=EquipmentCategory.ACCESSORY,
     )
 
     class Meta:
-        verbose_name = "Equipamiento"
-        verbose_name_plural = "Equipamientos"
-        ordering = ["nombre"]
+        verbose_name = "Equipment"
+        verbose_name_plural = "Equipment"
+        ordering = ["name"]
 
     def __str__(self):
-        return f"{self.nombre} ({self.get_categoria_display()})"
+        return f"{self.name} ({self.get_category_display()})"
 
 
-class Ejercicio(models.Model):
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField(blank=True)
-    grupo_muscular = models.CharField(
-        max_length=20, choices=GrupoMuscular.choices, default=GrupoMuscular.FULL_BODY
+class Exercise(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    muscle_group = models.CharField(
+        max_length=20, choices=MuscleGroup.choices, default=MuscleGroup.FULL_BODY
     )
-    dificultad = models.CharField(
+    difficulty = models.CharField(
         max_length=20,
-        choices=DificultadEjercicio.choices,
-        default=DificultadEjercicio.INTERMEDIO,
+        choices=ExerciseDifficulty.choices,
+        default=ExerciseDifficulty.INTERMEDIATE,
     )
-    imagen_url = models.URLField(blank=True, null=True)
-    equipamientos = models.ManyToManyField(
-        Equipamiento,
-        related_name="ejercicios",
+    image_url = models.URLField(blank=True, null=True)
+    equipment = models.ManyToManyField(
+        Equipment,
+        related_name="exercises",
         blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
-        verbose_name = "Ejercicio"
-        verbose_name_plural = "Ejercicios"
-        ordering = ["nombre"]
+        verbose_name = "Exercise"
+        verbose_name_plural = "Exercises"
+        ordering = ["name"]
 
     def __str__(self):
-        return f"{self.nombre} ({self.get_grupo_muscular_display()})"
+        return f"{self.name} ({self.get_muscle_group_display()})"
 
 
-class Rutina(models.Model):
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField(blank=True)
-    ejercicios = models.ManyToManyField(
-        Ejercicio, through="RutinaEjercicio", related_name="rutinas"
+class Routine(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    exercises = models.ManyToManyField(
+        Exercise, through="RoutineExercise", related_name="routines"
     )
-    duracion_minutos = models.PositiveIntegerField(
-        default=60, help_text="Duración estimada en minutos"
+    duration_minutes = models.PositiveIntegerField(
+        default=60, help_text="Estimated duration in minutes"
     )
-    nivel = models.CharField(
+    level = models.CharField(
         max_length=20,
         choices=[
-            ("PRINCIPIANTE", "Principiante"),
-            ("INTERMEDIO", "Intermedio"),
-            ("AVANZADO", "Avanzado"),
+            ("BEGINNER", "Beginner"),
+            ("INTERMEDIATE", "Intermediate"),
+            ("ADVANCED", "Advanced"),
         ],
-        default="INTERMEDIO",
+        default="INTERMEDIATE",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Rutina"
-        verbose_name_plural = "Rutinas"
-        ordering = ["nombre"]
+        verbose_name = "Routine"
+        verbose_name_plural = "Routines"
+        ordering = ["name"]
 
     def __str__(self):
-        return self.nombre
+        return self.name
 
 
-class RutinaEjercicio(models.Model):
-    rutina = models.ForeignKey(
-        Rutina, on_delete=models.CASCADE, related_name="rutina_ejercicios"
+class RoutineExercise(models.Model):
+    routine = models.ForeignKey(
+        Routine, on_delete=models.CASCADE, related_name="routine_exercises"
     )
-    ejercicio = models.ForeignKey(Ejercicio, on_delete=models.CASCADE)
+    exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE)
     series = models.PositiveIntegerField(default=3)
-    repeticiones = models.CharField(
-        max_length=20, default="12", help_text="Ej: 12, 10-12, hasta el fallo"
+    repetitions = models.CharField(
+        max_length=20, default="12", help_text="Ex: 12, 10-12, to failure"
     )
-    descanso_segundos = models.PositiveIntegerField(default=60)
-    orden = models.PositiveIntegerField(default=0)
-    notas = models.CharField(max_length=255, blank=True)
+    rest_seconds = models.PositiveIntegerField(default=60)
+    order = models.PositiveIntegerField(default=0)
+    notes = models.CharField(max_length=255, blank=True)
 
     class Meta:
-        verbose_name = "Ejercicio en Rutina"
-        verbose_name_plural = "Ejercicios en Rutina"
-        ordering = ["orden"]
-        unique_together = ["rutina", "ejercicio"]
+        verbose_name = "Exercise in Routine"
+        verbose_name_plural = "Exercises in Routine"
+        ordering = ["order"]
+        unique_together = ["routine", "exercise"]
 
     def __str__(self):
-        return f"{self.ejercicio.nombre} - {self.series}x{self.repeticiones}"
+        return f"{self.exercise.name} - {self.series}x{self.repetitions}"
 
 
-class DiaSemana(models.IntegerChoices):
-    LUNES = 1, "Lunes"
-    MARTES = 2, "Martes"
-    MIERCOLES = 3, "Miércoles"
-    JUEVES = 4, "Jueves"
-    VIERNES = 5, "Viernes"
-    SABADO = 6, "Sábado"
-    DOMINGO = 7, "Domingo"
+class Weekday(models.IntegerChoices):
+    MONDAY = 1, "Monday"
+    TUESDAY = 2, "Tuesday"
+    WEDNESDAY = 3, "Wednesday"
+    THURSDAY = 4, "Thursday"
+    FRIDAY = 5, "Friday"
+    SATURDAY = 6, "Saturday"
+    SUNDAY = 7, "Sunday"
 
 
-class PlanSemanal(models.Model):
-    usuario = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="planes_semanales"
+class WeeklyPlan(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="weekly_plans"
     )
-    rutina = models.ForeignKey(Rutina, on_delete=models.CASCADE, related_name="planes")
-    dia_semana = models.IntegerField(choices=DiaSemana.choices)
-    activo = models.BooleanField(default=True)
-    notas = models.TextField(blank=True, help_text="Notas adicionales para este día")
+    routine = models.ForeignKey(Routine, on_delete=models.CASCADE, related_name="plans")
+    weekday = models.IntegerField(choices=Weekday.choices)
+    active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True, help_text="Additional notes for this day")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Plan Semanal"
-        verbose_name_plural = "Planes Semanales"
-        ordering = ["dia_semana"]
-        unique_together = ["usuario", "dia_semana"]
+        verbose_name = "Weekly Plan"
+        verbose_name_plural = "Weekly Plans"
+        ordering = ["weekday"]
+        unique_together = ["user", "weekday"]
 
     def __str__(self):
-        return f"{self.usuario.email} - {self.get_dia_semana_display()} - {self.rutina.nombre}"
+        return f"{self.user.email} - {self.get_weekday_display()} - {self.routine.name}"
+
+
+# Backward-compatibility aliases (Phase 1)
+ObjetivoEntrenamiento = TrainingGoal
+NivelEntrenamiento = TrainingLevel
+GrupoMuscular = MuscleGroup
+DificultadEjercicio = ExerciseDifficulty
+CategoriaEquipamiento = EquipmentCategory
+Equipamiento = Equipment
+Ejercicio = Exercise
+Rutina = Routine
+RutinaEjercicio = RoutineExercise
+DiaSemana = Weekday
+PlanSemanal = WeeklyPlan

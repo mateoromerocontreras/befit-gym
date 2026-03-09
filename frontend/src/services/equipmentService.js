@@ -13,13 +13,13 @@ class EquipmentService {
 
     /**
      * Obtiene todos los equipamientos disponibles
-     * @param {string} categoria - Filtro opcional por categoría
+     * @param {string} category - Filtro opcional por categoría (ej: WEIGHTS, MACHINE)
      * @returns {Promise<Array>} Lista de equipamientos
      */
-    async getAllEquipment(categoria = null) {
+    async getAllEquipment(category = null) {
         try {
-            const params = categoria ? { categoria } : {};
-            const response = await axios.get(`${API_URL}/equipamientos/`, {
+            const params = category ? { category } : {};
+            const response = await axios.get(`${API_URL}/equipment/`, {
                 headers: this.getAuthHeader(),
                 params
             });
@@ -33,11 +33,11 @@ class EquipmentService {
 
     /**
      * Obtiene equipamiento por categoría
-     * @param {string} categoria - Categoría a filtrar
+     * @param {string} category - Categoría a filtrar (ej: WEIGHTS, MACHINE)
      * @returns {Promise<Array>} Lista filtrada de equipamientos
      */
-    async getEquipmentByCategory(categoria) {
-        return this.getAllEquipment(categoria);
+    async getEquipmentByCategory(category) {
+        return this.getAllEquipment(category);
     }
 
     /**
@@ -46,7 +46,7 @@ class EquipmentService {
      * @returns {Promise<Object>} Datos del equipamiento
      */
     async getEquipmentById(id) {
-        const response = await axios.get(`${API_URL}/equipamientos/${id}/`, {
+        const response = await axios.get(`${API_URL}/equipment/${id}/`, {
             headers: this.getAuthHeader()
         });
         return response.data;
@@ -85,7 +85,7 @@ class EquipmentService {
             if (Array.isArray(response.data)) {
                 return response.data;
             }
-            return response.data.equipment_ids || response.data.equipamientos || [];
+            return response.data.equipment_ids || [];
         } catch (error) {
             console.error('Error fetching user equipment selection:', error);
             return [];
@@ -94,26 +94,26 @@ class EquipmentService {
 
     /**
      * Mapea categorías a etiquetas legibles
-     * @param {string} categoria - Categoría en formato UPPERCASE_SNAKE_CASE
+     * @param {string} category - Categoría en formato UPPERCASE (ej: WEIGHTS)
      * @returns {string} Etiqueta legible
      */
-    getCategoryLabel(categoria) {
+    getCategoryLabel(category) {
         const labels = {
-            PESO_LIBRE: 'Peso Libre',
-            MAQUINA: 'Máquinas',
+            WEIGHTS: 'Peso Libre',
+            MACHINE: 'Máquinas',
             CARDIO: 'Cardio',
-            ACCESORIO: 'Accesorios',
-            CALISTENIA: 'Calistenia'
+            ACCESSORY: 'Accesorios',
+            CALISTHENICS: 'Calistenia',
         };
-        return labels[categoria] || categoria;
+        return labels[category] || category;
     }
 
     /**
      * Obtiene todas las categorías disponibles
-     * @returns {Array<string>} Array de categorías
+     * @returns {Array<string>} Array de categorías en inglés
      */
     getCategories() {
-        return ['PESO_LIBRE', 'MAQUINA', 'CARDIO', 'ACCESORIO', 'CALISTENIA'];
+        return ['WEIGHTS', 'MACHINE', 'CARDIO', 'ACCESSORY', 'CALISTHENICS'];
     }
 }
 

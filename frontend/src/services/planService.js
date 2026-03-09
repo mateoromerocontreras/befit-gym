@@ -16,7 +16,7 @@ class PlanService {
      * @returns {Promise<Array>} Lista de planes por día de la semana
      */
     async getPlanSemanal() {
-        const response = await axios.get(`${API_URL}/plan-semanal/`, {
+        const response = await axios.get(`${API_URL}/weekly-plan/`, {
             headers: this.getAuthHeader()
         });
         return response.data;
@@ -28,7 +28,7 @@ class PlanService {
      * @returns {Promise<Object>} Detalle del plan con rutina y ejercicios
      */
     async getPlanDetalle(planId) {
-        const response = await axios.get(`${API_URL}/plan-semanal/${planId}/`, {
+        const response = await axios.get(`${API_URL}/weekly-plan/${planId}/`, {
             headers: this.getAuthHeader()
         });
         return response.data;
@@ -36,12 +36,12 @@ class PlanService {
 
     /**
      * Obtiene todos los ejercicios disponibles
-     * @param {string} grupoMuscular - Filtro opcional por grupo muscular
+     * @param {string} muscleGroup - Filtro opcional por grupo muscular (ej: CHEST, BACK)
      * @returns {Promise<Array>} Lista de ejercicios
      */
-    async getEjercicios(grupoMuscular = null) {
-        const params = grupoMuscular ? { grupo_muscular: grupoMuscular } : {};
-        const response = await axios.get(`${API_URL}/ejercicios/`, {
+    async getEjercicios(muscleGroup = null) {
+        const params = muscleGroup ? { muscle_group: muscleGroup } : {};
+        const response = await axios.get(`${API_URL}/exercises/`, {
             headers: this.getAuthHeader(),
             params
         });
@@ -53,7 +53,7 @@ class PlanService {
      * @returns {Promise<Array>} Lista de rutinas con ejercicios
      */
     async getRutinas() {
-        const response = await axios.get(`${API_URL}/rutinas/`, {
+        const response = await axios.get(`${API_URL}/routines/`, {
             headers: this.getAuthHeader()
         });
         return response.data;
@@ -87,7 +87,7 @@ class PlanService {
         for (let i = 1; i <= 7; i++) {
             semana[i] = {
                 nombre: this.getDiaNombre(i),
-                plan: planes.find(p => p.dia_semana === i) || null
+                plan: planes.find(p => p.weekday === i) || null
             };
         }
         return semana;

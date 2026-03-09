@@ -3,11 +3,18 @@ import axios from 'axios';
 const API_URL = 'http://localhost:8000/api/auth';
 
 class AuthService {
-    async register(email, password, password2) {
+    async register(dataOrEmail, password, password2) {
+        const payload = typeof dataOrEmail === 'object'
+            ? dataOrEmail
+            : { email: dataOrEmail, password, password2 };
+
         const response = await axios.post(`${API_URL}/register/`, {
-            email,
-            password,
-            password2
+            email: payload.email,
+            password: payload.password,
+            password2: payload.password2,
+            age: payload.age,
+            goal: payload.goal,
+            level: payload.level
         });
         if (response.data.access) {
             localStorage.setItem('access_token', response.data.access);

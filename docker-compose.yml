@@ -1,7 +1,15 @@
 services:
   web:
     build: ./backend
-    command: python /code/manage.py runserver 0.0.0.0:8000
+    command: >
+      sh -c "
+      until python /code/manage.py migrate --noinput; do
+        echo 'Waiting for database...';
+        sleep 2;
+      done &&
+      python /code/manage.py seed_initial_data &&
+      python /code/manage.py runserver 0.0.0.0:8000
+      "
     volumes:
       - ./backend:/code
     ports:

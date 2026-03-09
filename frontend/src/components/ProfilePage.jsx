@@ -31,8 +31,8 @@ const ProfilePage = () => {
         edad: '',
         peso: '',
         altura: '',
-        objetivo: 'SALUD_GENERAL',
-        nivel: 'PRINCIPIANTE'
+        objetivo: 'GENERAL_HEALTH',
+        nivel: 'BEGINNER'
     });
 
     useEffect(() => {
@@ -41,8 +41,8 @@ const ProfilePage = () => {
                 edad: user.edad || '',
                 peso: user.peso || '',
                 altura: user.altura || '',
-                objetivo: user.objetivo || 'SALUD_GENERAL',
-                nivel: user.nivel || 'PRINCIPIANTE'
+                objetivo: user.objetivo || 'GENERAL_HEALTH',
+                nivel: user.nivel || 'BEGINNER'
             });
         }
     }, [user]);
@@ -63,11 +63,11 @@ const ProfilePage = () => {
         try {
             // Preparar datos (convertir strings vacíos a null)
             const dataToSend = {
-                edad: formData.edad ? parseInt(formData.edad) : null,
-                peso: formData.peso ? parseFloat(formData.peso) : null,
-                altura: formData.altura ? parseFloat(formData.altura) : null,
-                objetivo: formData.objetivo,
-                nivel: formData.nivel
+                age: formData.edad ? parseInt(formData.edad) : null,
+                weight: formData.peso ? parseFloat(formData.peso) : null,
+                height: formData.altura ? parseFloat(formData.altura) : null,
+                goal: formData.objetivo,
+                level: formData.nivel
             };
 
             const updatedUser = await profileService.updateUserProfile(dataToSend);
@@ -98,18 +98,18 @@ const ProfilePage = () => {
     };
 
     const objetivoOptions = [
-        { value: 'PERDER_PESO', label: 'Perder Peso', emoji: '🔥' },
-        { value: 'GANAR_MASA', label: 'Ganar Masa Muscular', emoji: '💪' },
-        { value: 'TONIFICAR', label: 'Tonificar', emoji: '✨' },
-        { value: 'FUERZA', label: 'Aumentar Fuerza', emoji: '🏋️' },
-        { value: 'RESISTENCIA', label: 'Mejorar Resistencia', emoji: '🏃' },
-        { value: 'SALUD_GENERAL', label: 'Salud General', emoji: '❤️' }
+        { value: 'LOSE_WEIGHT', label: 'Perder Peso', emoji: '🔥' },
+        { value: 'GAIN_MUSCLE', label: 'Ganar Masa Muscular', emoji: '💪' },
+        { value: 'TONE', label: 'Tonificar', emoji: '✨' },
+        { value: 'STRENGTH', label: 'Aumentar Fuerza', emoji: '🏋️' },
+        { value: 'ENDURANCE', label: 'Mejorar Resistencia', emoji: '🏃' },
+        { value: 'GENERAL_HEALTH', label: 'Salud General', emoji: '❤️' }
     ];
 
     const nivelOptions = [
-        { value: 'PRINCIPIANTE', label: 'Principiante', description: '0-6 meses de experiencia' },
-        { value: 'INTERMEDIO', label: 'Intermedio', description: '6 meses - 2 años' },
-        { value: 'AVANZADO', label: 'Avanzado', description: 'Más de 2 años' }
+        { value: 'BEGINNER', label: 'Principiante', description: '0-6 meses de experiencia' },
+        { value: 'INTERMEDIATE', label: 'Intermedio', description: '6 meses - 2 años' },
+        { value: 'ADVANCED', label: 'Avanzado', description: 'Más de 2 años' }
     ];
 
     return (

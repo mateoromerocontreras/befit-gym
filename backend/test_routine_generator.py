@@ -14,7 +14,7 @@ sys.path.append("/code")
 os.environ.setdefault("DJANGO_PROJECT_SETTINGS_MODULE", "django_project.settings")
 django.setup()
 
-from accounts.models import User, Equipamiento
+from accounts.models import User, Equipment
 from accounts.services.routine_generator import generate_routine
 
 
@@ -28,21 +28,21 @@ def setup_test_user():
         return None
 
     # Actualizar perfil
-    user.edad = 28
-    user.objetivo = "GANAR_MASA"
-    user.nivel = "INTERMEDIO"
-    user.peso = 75.0
-    user.altura = 1.75
+    user.age = 28
+    user.goal = "GAIN_MUSCLE"
+    user.level = "INTERMEDIATE"
+    user.weight = 75.0
+    user.height = 1.75
     user.save()
 
     # Asignar equipamiento
-    equipos = Equipamiento.objects.filter(categoria__in=["PESO_LIBRE", "MAQUINA"])[:10]
-    user.equipamientos_preferidos.set(equipos)
+    equipos = Equipment.objects.filter(category__in=["WEIGHTS", "MACHINE"])[:10]
+    user.preferred_equipment.set(equipos)
 
     print(f"✅ Usuario configurado: {user.email}")
-    print(f"   - Objetivo: {user.get_objetivo_display()}")
-    print(f"   - Nivel: {user.get_nivel_display()}")
-    print(f"   - Equipamiento: {user.equipamientos_preferidos.count()} items")
+    print(f"   - Objetivo: {user.get_goal_display()}")
+    print(f"   - Nivel: {user.get_level_display()}")
+    print(f"   - Equipamiento: {user.preferred_equipment.count()} items")
 
     return user
 

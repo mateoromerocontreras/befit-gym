@@ -28,16 +28,36 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const register = async (email, password, password2) => {
+    const register = async (dataOrEmail, password, password2) => {
         try {
-            const data = await authService.register(email, password, password2);
+            const payload = typeof dataOrEmail === 'object'
+                ? dataOrEmail
+                : { email: dataOrEmail, password, password2 };
+
+            const data = await authService.register(payload);
             setUser(data.user);
             return { success: true, message: data.message };
         } catch (error) {
-            const errorMsg = error.response?.data?.email?.[0] ||
-                error.response?.data?.password?.[0] ||
-                error.response?.data?.error ||
-                'Registration failed';
+            const responseData = error.response?.data;
+            const fieldOrder = ['email', 'password', 'password2', 'age', 'goal', 'level'];
+
+            let errorMsg = 'Registration failed';
+            for (const field of fieldOrder) {
+                const fieldError = responseData?.[field];
+                if (Array.isArray(fieldError) && fieldError.length > 0) {
+                    errorMsg = fieldError[0];
+                    break;
+                }
+                if (typeof fieldError === 'string') {
+                    errorMsg = fieldError;
+                    break;
+                }
+            }
+
+            if (errorMsg === 'Registration failed') {
+                errorMsg = responseData?.error || errorMsg;
+            }
+
             return { success: false, message: errorMsg };
         }
     };

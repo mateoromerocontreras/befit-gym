@@ -50,11 +50,11 @@ class ProfileService {
      * @param {string} nombreRutina - Nombre personalizado (opcional)
      * @returns {Promise<Object>} Resultado de la generación
      */
-    async generateRoutine(diasSemana = 3, nombreRutina = null) {
+    async generateRoutine(trainingDays = 3, routineName = null) {
         try {
-            const payload = { dias_semana: diasSemana };
-            if (nombreRutina) {
-                payload.nombre_rutina = nombreRutina;
+            const payload = { training_days: trainingDays };
+            if (routineName) {
+                payload.routine_name = routineName;
             }
 
             const response = await axios.post(`${API_URL}/generate-routine/`, payload, {

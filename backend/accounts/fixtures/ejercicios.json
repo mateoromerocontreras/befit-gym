@@ -1,482 +1,582 @@
 [
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 1,
     "fields": {
-      "nombre": "Sentadilla con Barra",
-      "descripcion": "Sentadilla trasera para desarrollar fuerza global de piernas y core.",
-      "grupo_muscular": "PIERNAS",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [1, 5, 8]
+      "name": "Sentadilla con Barra",
+      "description": "Sentadilla trasera para desarrollar fuerza global de piernas y core.",
+      "muscle_group": "LEGS",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        1,
+        5,
+        8
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 2,
     "fields": {
-      "nombre": "Sentadilla Frontal",
-      "descripcion": "Variante con barra frontal que enfatiza cuádriceps y estabilidad del torso.",
-      "grupo_muscular": "PIERNAS",
-      "dificultad": "AVANZADO",
-      "imagen_url": null,
-      "equipamientos": [1, 5, 8]
+      "name": "Sentadilla Frontal",
+      "description": "Variante con barra frontal que enfatiza cuádriceps y estabilidad del torso.",
+      "muscle_group": "LEGS",
+      "difficulty": "ADVANCED",
+      "image_url": null,
+      "equipment": [
+        1,
+        5,
+        8
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 3,
     "fields": {
-      "nombre": "Peso Muerto Convencional",
-      "descripcion": "Movimiento básico de cadena posterior para fuerza total.",
-      "grupo_muscular": "ESPALDA",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [1, 5]
+      "name": "Peso Muerto Convencional",
+      "description": "Movimiento básico de cadena posterior para fuerza total.",
+      "muscle_group": "BACK",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        1,
+        5
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 4,
     "fields": {
-      "nombre": "Peso Muerto Rumano",
-      "descripcion": "Enfocado en femorales y glúteos con control excéntrico.",
-      "grupo_muscular": "GLUTEOS",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [1, 5]
+      "name": "Peso Muerto Rumano",
+      "description": "Enfocado en femorales y glúteos con control excéntrico.",
+      "muscle_group": "LEGS",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        1,
+        5
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 5,
     "fields": {
-      "nombre": "Press de Banca Plano",
-      "descripcion": "Ejercicio principal de empuje horizontal para pectoral.",
-      "grupo_muscular": "PECHO",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [1, 5, 22]
+      "name": "Press de Banca Plano",
+      "description": "Ejercicio principal de empuje horizontal para pectoral.",
+      "muscle_group": "CHEST",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        1,
+        5,
+        22
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 6,
     "fields": {
-      "nombre": "Press de Banca Inclinado",
-      "descripcion": "Variante inclinada para enfatizar pectoral superior.",
-      "grupo_muscular": "PECHO",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [1, 5, 23]
+      "name": "Press de Banca Inclinado",
+      "description": "Variante inclinada para enfatizar pectoral superior.",
+      "muscle_group": "CHEST",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        1,
+        5,
+        23
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 7,
     "fields": {
-      "nombre": "Press Militar de Pie",
-      "descripcion": "Empuje vertical con barra para hombros y tríceps.",
-      "grupo_muscular": "HOMBROS",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [1, 5]
+      "name": "Press Militar de Pie",
+      "description": "Empuje vertical con barra para hombros y tríceps.",
+      "muscle_group": "SHOULDERS",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        1,
+        5
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 8,
     "fields": {
-      "nombre": "Remo con Barra",
-      "descripcion": "Tirón horizontal para dorsales, romboides y zona media.",
-      "grupo_muscular": "ESPALDA",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [1, 5]
+      "name": "Remo con Barra",
+      "description": "Tirón horizontal para dorsales, romboides y zona media.",
+      "muscle_group": "BACK",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        1,
+        5
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 9,
     "fields": {
-      "nombre": "Hip Thrust con Barra",
-      "descripcion": "Extensión de cadera para glúteo mayor y estabilidad lumbo-pélvica.",
-      "grupo_muscular": "GLUTEOS",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [1, 5, 22]
+      "name": "Hip Thrust con Barra",
+      "description": "Extensión de cadera para glúteo mayor y estabilidad lumbo-pélvica.",
+      "muscle_group": "LEGS",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        1,
+        5,
+        22
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 10,
     "fields": {
-      "nombre": "Zancadas con Mancuernas",
-      "descripcion": "Trabajo unilateral de piernas y equilibrio dinámico.",
-      "grupo_muscular": "PIERNAS",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [3]
+      "name": "Zancadas con Mancuernas",
+      "description": "Trabajo unilateral de piernas y equilibrio dinámico.",
+      "muscle_group": "LEGS",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        3
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 11,
     "fields": {
-      "nombre": "Press de Pecho con Mancuernas",
-      "descripcion": "Empuje horizontal con mayor rango articular.",
-      "grupo_muscular": "PECHO",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [3, 22]
+      "name": "Press de Pecho con Mancuernas",
+      "description": "Empuje horizontal con mayor rango articular.",
+      "muscle_group": "CHEST",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        3,
+        22
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 12,
     "fields": {
-      "nombre": "Aperturas con Mancuernas",
-      "descripcion": "Aislamiento de pectoral en banco plano.",
-      "grupo_muscular": "PECHO",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [3, 22]
+      "name": "Aperturas con Mancuernas",
+      "description": "Aislamiento de pectoral en banco plano.",
+      "muscle_group": "CHEST",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        3,
+        22
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 13,
     "fields": {
-      "nombre": "Remo con Mancuerna a Una Mano",
-      "descripcion": "Tirón unilateral para dorsales y control escapular.",
-      "grupo_muscular": "ESPALDA",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [3, 22]
+      "name": "Remo con Mancuerna a Una Mano",
+      "description": "Tirón unilateral para dorsales y control escapular.",
+      "muscle_group": "BACK",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        3,
+        22
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 14,
     "fields": {
-      "nombre": "Curl de Bíceps con Mancuernas",
-      "descripcion": "Flexión de codo alterna para desarrollo del bíceps.",
-      "grupo_muscular": "BICEPS",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [3]
+      "name": "Curl de Bíceps con Mancuernas",
+      "description": "Flexión de codo alterna para desarrollo del bíceps.",
+      "muscle_group": "ARMS",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        3
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 15,
     "fields": {
-      "nombre": "Press Arnold",
-      "descripcion": "Press con rotación para deltoides completo.",
-      "grupo_muscular": "HOMBROS",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [3]
+      "name": "Press Arnold",
+      "description": "Press con rotación para deltoides completo.",
+      "muscle_group": "SHOULDERS",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        3
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 16,
     "fields": {
-      "nombre": "Elevaciones Laterales",
-      "descripcion": "Aislamiento de deltoides medio para amplitud de hombros.",
-      "grupo_muscular": "HOMBROS",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [3]
+      "name": "Elevaciones Laterales",
+      "description": "Aislamiento de deltoides medio para amplitud de hombros.",
+      "muscle_group": "SHOULDERS",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        3
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 17,
     "fields": {
-      "nombre": "Fondos en Paralelas",
-      "descripcion": "Empuje en cadena cerrada para tríceps y pecho inferior.",
-      "grupo_muscular": "TRICEPS",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [27]
+      "name": "Fondos en Paralelas",
+      "description": "Empuje en cadena cerrada para tríceps y pecho inferior.",
+      "muscle_group": "ARMS",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        27
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 18,
     "fields": {
-      "nombre": "Dominadas Pronadas",
-      "descripcion": "Tirón vertical para dorsales y espalda alta.",
-      "grupo_muscular": "ESPALDA",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [26]
+      "name": "Dominadas Pronadas",
+      "description": "Tirón vertical para dorsales y espalda alta.",
+      "muscle_group": "BACK",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        26
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 19,
     "fields": {
-      "nombre": "Dominadas Supinas",
-      "descripcion": "Variante de dominada que incrementa participación de bíceps.",
-      "grupo_muscular": "BICEPS",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [26]
+      "name": "Dominadas Supinas",
+      "description": "Variante de dominada que incrementa participación de bíceps.",
+      "muscle_group": "ARMS",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        26
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 20,
     "fields": {
-      "nombre": "Face Pull en Polea",
-      "descripcion": "Trabajo de deltoides posterior y manguito rotador.",
-      "grupo_muscular": "HOMBROS",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [13, 15]
+      "name": "Face Pull en Polea",
+      "description": "Trabajo de deltoides posterior y manguito rotador.",
+      "muscle_group": "SHOULDERS",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        13,
+        15
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 21,
     "fields": {
-      "nombre": "Jalón al Pecho en Polea",
-      "descripcion": "Tirón vertical guiado para espalda y dorsales.",
-      "grupo_muscular": "ESPALDA",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [13]
+      "name": "Jalón al Pecho en Polea",
+      "description": "Tirón vertical guiado para espalda y dorsales.",
+      "muscle_group": "BACK",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        13
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 22,
     "fields": {
-      "nombre": "Remo en Polea Baja",
-      "descripcion": "Tirón horizontal en cable para densidad de espalda.",
-      "grupo_muscular": "ESPALDA",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [14]
+      "name": "Remo en Polea Baja",
+      "description": "Tirón horizontal en cable para densidad de espalda.",
+      "muscle_group": "BACK",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        14
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 23,
     "fields": {
-      "nombre": "Cruce de Poleas para Pecho",
-      "descripcion": "Aducción de hombro en cable para pectoral.",
-      "grupo_muscular": "PECHO",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [15]
+      "name": "Cruce de Poleas para Pecho",
+      "description": "Aducción de hombro en cable para pectoral.",
+      "muscle_group": "CHEST",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        15
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 24,
     "fields": {
-      "nombre": "Extensión de Tríceps en Polea",
-      "descripcion": "Aislamiento de tríceps con recorrido controlado.",
-      "grupo_muscular": "TRICEPS",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [13]
+      "name": "Extensión de Tríceps en Polea",
+      "description": "Aislamiento de tríceps con recorrido controlado.",
+      "muscle_group": "ARMS",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        13
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 25,
     "fields": {
-      "nombre": "Curl de Bíceps en Polea Baja",
-      "descripcion": "Flexión de codo continua con tensión de cable.",
-      "grupo_muscular": "BICEPS",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [14]
+      "name": "Curl de Bíceps en Polea Baja",
+      "description": "Flexión de codo continua con tensión de cable.",
+      "muscle_group": "ARMS",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        14
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 26,
     "fields": {
-      "nombre": "Sentadilla en Hack",
-      "descripcion": "Patrón de sentadilla guiado para cuádriceps.",
-      "grupo_muscular": "PIERNAS",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [7]
+      "name": "Sentadilla en Hack",
+      "description": "Patrón de sentadilla guiado para cuádriceps.",
+      "muscle_group": "LEGS",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        7
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 27,
     "fields": {
-      "nombre": "Prensa de Piernas 45°",
-      "descripcion": "Empuje de piernas en plano inclinado para fuerza.",
-      "grupo_muscular": "PIERNAS",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [6]
+      "name": "Prensa de Piernas 45°",
+      "description": "Empuje de piernas en plano inclinado para fuerza.",
+      "muscle_group": "LEGS",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        6
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 28,
     "fields": {
-      "nombre": "Extensión de Cuádriceps",
-      "descripcion": "Aislamiento del cuádriceps en máquina.",
-      "grupo_muscular": "PIERNAS",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [10]
+      "name": "Extensión de Cuádriceps",
+      "description": "Aislamiento del cuádriceps en máquina.",
+      "muscle_group": "LEGS",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        10
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 29,
     "fields": {
-      "nombre": "Curl Femoral Tumbado",
-      "descripcion": "Trabajo específico de isquiotibiales en camilla.",
-      "grupo_muscular": "PIERNAS",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [11]
+      "name": "Curl Femoral Tumbado",
+      "description": "Trabajo específico de isquiotibiales en camilla.",
+      "muscle_group": "LEGS",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        11
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 30,
     "fields": {
-      "nombre": "Sentadilla en Smith",
-      "descripcion": "Variante guiada para progresión técnica y seguridad.",
-      "grupo_muscular": "PIERNAS",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [12]
+      "name": "Sentadilla en Smith",
+      "description": "Variante guiada para progresión técnica y seguridad.",
+      "muscle_group": "LEGS",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        12
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 31,
     "fields": {
-      "nombre": "Press de Hombros en Máquina",
-      "descripcion": "Empuje vertical guiado para deltoides y tríceps.",
-      "grupo_muscular": "HOMBROS",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [9]
+      "name": "Press de Hombros en Máquina",
+      "description": "Empuje vertical guiado para deltoides y tríceps.",
+      "muscle_group": "SHOULDERS",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        9
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 32,
     "fields": {
-      "nombre": "Press de Pecho en Máquina",
-      "descripcion": "Empuje horizontal estable para hipertrofia de pectoral.",
-      "grupo_muscular": "PECHO",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [9]
+      "name": "Press de Pecho en Máquina",
+      "description": "Empuje horizontal estable para hipertrofia de pectoral.",
+      "muscle_group": "CHEST",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        9
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 33,
     "fields": {
-      "nombre": "Remo en Máquina",
-      "descripcion": "Tirón horizontal guiado para dorsales y romboides.",
-      "grupo_muscular": "ESPALDA",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [9]
+      "name": "Remo en Máquina",
+      "description": "Tirón horizontal guiado para dorsales y romboides.",
+      "muscle_group": "BACK",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        9
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 34,
     "fields": {
-      "nombre": "Curl Scott con Barra Z",
-      "descripcion": "Aislamiento de bíceps en banco Scott con barra EZ.",
-      "grupo_muscular": "BICEPS",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [2, 25]
+      "name": "Curl Scott con Barra Z",
+      "description": "Aislamiento de bíceps en banco Scott con barra EZ.",
+      "muscle_group": "ARMS",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        2,
+        25
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 35,
     "fields": {
-      "nombre": "Extensión de Tríceps con Barra Z",
-      "descripcion": "Trabajo de tríceps en banco con barra EZ.",
-      "grupo_muscular": "TRICEPS",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [2, 22]
+      "name": "Extensión de Tríceps con Barra Z",
+      "description": "Trabajo de tríceps en banco con barra EZ.",
+      "muscle_group": "ARMS",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        2,
+        22
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 36,
     "fields": {
-      "nombre": "Plancha Frontal",
-      "descripcion": "Isometría de core para estabilidad del tronco.",
-      "grupo_muscular": "ABDOMEN",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [31]
+      "name": "Plancha Frontal",
+      "description": "Isometría de core para estabilidad del tronco.",
+      "muscle_group": "CORE",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        31
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 37,
     "fields": {
-      "nombre": "Crunch en Fitball",
-      "descripcion": "Flexión controlada de tronco con apoyo inestable.",
-      "grupo_muscular": "ABDOMEN",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [32]
+      "name": "Crunch en Fitball",
+      "description": "Flexión controlada de tronco con apoyo inestable.",
+      "muscle_group": "CORE",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        32
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 38,
     "fields": {
-      "nombre": "Mountain Climbers",
-      "descripcion": "Ejercicio dinámico de core y resistencia cardiovascular.",
-      "grupo_muscular": "ABDOMEN",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [31]
+      "name": "Mountain Climbers",
+      "description": "Ejercicio dinámico de core y resistencia cardiovascular.",
+      "muscle_group": "CORE",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        31
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 39,
     "fields": {
-      "nombre": "Carrera en Cinta",
-      "descripcion": "Trabajo aeróbico continuo para capacidad cardiorrespiratoria.",
-      "grupo_muscular": "CARDIO",
-      "dificultad": "PRINCIPIANTE",
-      "imagen_url": null,
-      "equipamientos": [16]
+      "name": "Carrera en Cinta",
+      "description": "Trabajo aeróbico continuo para capacidad cardiorrespiratoria.",
+      "muscle_group": "FULL_BODY",
+      "difficulty": "BEGINNER",
+      "image_url": null,
+      "equipment": [
+        16
+      ]
     }
   },
   {
-    "model": "accounts.ejercicio",
+    "model": "accounts.exercise",
     "pk": 40,
     "fields": {
-      "nombre": "HIIT en Bicicleta de Spinning",
-      "descripcion": "Intervalos de alta intensidad para mejora de VO2 y gasto calórico.",
-      "grupo_muscular": "CARDIO",
-      "dificultad": "INTERMEDIO",
-      "imagen_url": null,
-      "equipamientos": [18]
+      "name": "HIIT en Bicicleta de Spinning",
+      "description": "Intervalos de alta intensidad para mejora de VO2 y gasto calórico.",
+      "muscle_group": "FULL_BODY",
+      "difficulty": "INTERMEDIATE",
+      "image_url": null,
+      "equipment": [
+        18
+      ]
     }
   }
 ]

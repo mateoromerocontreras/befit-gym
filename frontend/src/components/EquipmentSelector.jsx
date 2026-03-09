@@ -41,16 +41,58 @@ const EquipmentSelector = ({
 
     // Inicializar categorías expandidas
     useEffect(() => {
-        const categories = ['PESO_LIBRE', 'MAQUINA', 'CARDIO', 'ACCESORIO', 'CALISTENIA'];
+        const categories = Array.from(
+            new Set(
+                equipmentList
+                    .map((item) => item.category || item.categoria)
+                    .filter(Boolean)
+            )
+        );
         const expanded = categories.reduce((acc, cat) => {
             acc[cat] = true;
             return acc;
         }, {});
         setExpandedCategories(expanded);
-    }, []);
+        setAllExpanded(true);
+    }, [equipmentList]);
 
     // Mapeo de categorías a iconos y colores
     const categoryConfig = {
+        WEIGHTS: {
+            icon: Dumbbell,
+            label: 'Peso Libre',
+            bgColor: 'bg-orange-900/20',
+            borderColor: 'border-orange-700',
+            textColor: 'text-orange-300',
+        },
+        MACHINE: {
+            icon: Cpu,
+            label: 'Máquinas',
+            bgColor: 'bg-blue-900/20',
+            borderColor: 'border-blue-700',
+            textColor: 'text-blue-300',
+        },
+        CARDIO: {
+            icon: Heart,
+            label: 'Cardio',
+            bgColor: 'bg-red-900/20',
+            borderColor: 'border-red-700',
+            textColor: 'text-red-300',
+        },
+        ACCESSORY: {
+            icon: Package,
+            label: 'Accesorios',
+            bgColor: 'bg-purple-900/20',
+            borderColor: 'border-purple-700',
+            textColor: 'text-purple-300',
+        },
+        CALISTHENICS: {
+            icon: Users,
+            label: 'Calistenia',
+            bgColor: 'bg-green-900/20',
+            borderColor: 'border-green-700',
+            textColor: 'text-green-300',
+        },
         PESO_LIBRE: {
             icon: Dumbbell,
             label: 'Peso Libre',
@@ -64,13 +106,6 @@ const EquipmentSelector = ({
             bgColor: 'bg-blue-900/20',
             borderColor: 'border-blue-700',
             textColor: 'text-blue-300',
-        },
-        CARDIO: {
-            icon: Heart,
-            label: 'Cardio',
-            bgColor: 'bg-red-900/20',
-            borderColor: 'border-red-700',
-            textColor: 'text-red-300',
         },
         ACCESORIO: {
             icon: Package,
@@ -90,10 +125,14 @@ const EquipmentSelector = ({
 
     // Agrupar equipamiento por categoría
     const groupedEquipment = equipmentList.reduce((acc, item) => {
-        if (!acc[item.categoria]) {
-            acc[item.categoria] = [];
+        const category = item.category || item.categoria;
+        if (!category) {
+            return acc;
         }
-        acc[item.categoria].push(item);
+        if (!acc[category]) {
+            acc[category] = [];
+        }
+        acc[category].push(item);
         return acc;
     }, {});
 
@@ -201,7 +240,13 @@ const EquipmentSelector = ({
             {/* Categorías */}
             <div className="space-y-4">
                 {categories.map((categoria) => {
-                    const config = categoryConfig[categoria];
+                    const config = categoryConfig[categoria] || {
+                        icon: Package,
+                        label: categoria,
+                        bgColor: 'bg-gray-900/20',
+                        borderColor: 'border-gray-700',
+                        textColor: 'text-gray-300',
+                    };
                     const IconComponent = config.icon;
                     const items = groupedEquipment[categoria] || [];
                     const selectedInCategory = items.filter((item) =>
@@ -312,7 +357,7 @@ const EquipmentSelector = ({
                               ${isSelected ? 'text-accent-lime' : 'text-gray-300'}
                             `}
                                                     >
-                                                        {item.nombre}
+                                                        {item.name || item.nombre}
                                                     </p>
                                                 </button>
                                             );

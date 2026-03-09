@@ -7,6 +7,9 @@ const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [password2, setPassword2] = useState('');
+    const [age, setAge] = useState('');
+    const [goal, setGoal] = useState('GENERAL_HEALTH');
+    const [level, setLevel] = useState('BEGINNER');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -22,7 +25,16 @@ const Register = () => {
         }
 
         setLoading(true);
-        const result = await register(email, password, password2);
+        const payload = {
+            email,
+            password,
+            password2,
+            age: age ? Number(age) : undefined,
+            goal,
+            level,
+        };
+
+        const result = await register(payload);
         setLoading(false);
 
         if (result.success) {
@@ -160,6 +172,66 @@ const Register = () => {
                                         className="block w-full pl-10 pr-3 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-lime focus:border-transparent transition-all"
                                     />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    htmlFor="age"
+                                    className="block text-sm font-medium text-gray-300 mb-2"
+                                >
+                                    Edad
+                                </label>
+                                <input
+                                    type="number"
+                                    id="age"
+                                    value={age}
+                                    onChange={(e) => setAge(e.target.value)}
+                                    min="1"
+                                    max="120"
+                                    placeholder="Ej: 28"
+                                    className="block w-full px-3 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-lime focus:border-transparent transition-all"
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    htmlFor="goal"
+                                    className="block text-sm font-medium text-gray-300 mb-2"
+                                >
+                                    Objetivo
+                                </label>
+                                <select
+                                    id="goal"
+                                    value={goal}
+                                    onChange={(e) => setGoal(e.target.value)}
+                                    className="block w-full px-3 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent-lime focus:border-transparent transition-all"
+                                >
+                                    <option value="LOSE_WEIGHT">Perder peso</option>
+                                    <option value="GAIN_MUSCLE">Ganar músculo</option>
+                                    <option value="TONE">Tonificar</option>
+                                    <option value="STRENGTH">Aumentar fuerza</option>
+                                    <option value="ENDURANCE">Mejorar resistencia</option>
+                                    <option value="GENERAL_HEALTH">Salud general</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label
+                                    htmlFor="level"
+                                    className="block text-sm font-medium text-gray-300 mb-2"
+                                >
+                                    Nivel
+                                </label>
+                                <select
+                                    id="level"
+                                    value={level}
+                                    onChange={(e) => setLevel(e.target.value)}
+                                    className="block w-full px-3 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent-lime focus:border-transparent transition-all"
+                                >
+                                    <option value="BEGINNER">Principiante</option>
+                                    <option value="INTERMEDIATE">Intermedio</option>
+                                    <option value="ADVANCED">Avanzado</option>
+                                </select>
                             </div>
 
                             {/* Submit Button */}
