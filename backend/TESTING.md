@@ -42,6 +42,15 @@ docker compose exec web python manage.py test accounts.tests.UserModelTest
 
 # Ejecutar con más detalle (verbose)
 docker compose exec web python manage.py test accounts --verbosity=2
+
+# Ejecutar test mock del generador de rutinas (determinista)
+docker compose exec web python manage.py test accounts.tests_routine_generator --verbosity=2
+
+# Smoke test IA en modo mock (sin depender de cuota Gemini)
+docker-compose exec -T web python manage.py shell < backend/test_ia.py
+
+# Smoke test IA en modo live (usa Gemini real)
+docker-compose exec -T web env TEST_IA_MODE=live python manage.py shell < backend/test_ia.py
 ```
 
 ### Tests con cobertura:
