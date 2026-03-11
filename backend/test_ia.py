@@ -32,7 +32,10 @@ service = RoutineGeneratorService()
 print(f"--- Iniciando generación para {user.email} ---")
 try:
     routine = service.generate_routine_for_user(user_id=user.id, training_days=3)
-    print("✅ RUTINA GENERADA CON ÉXITO:")
+    if routine.get("success"):
+        print("✅ RUTINA GENERADA CON ÉXITO:")
+    else:
+        print("❌ ERROR EN LA GENERACIÓN:")
     print(json.dumps(routine, indent=2, ensure_ascii=False))
 except Exception as e:
     print(f"❌ ERROR EN LA GENERACIÓN: {e}")

@@ -1,6 +1,9 @@
 """AI Routine Generator service powered by Gemini."""
 
 import json
+import time
+import logging
+from functools import wraps
 from typing import Dict, List, Optional
 from django.conf import settings
 from django.db import transaction
@@ -14,6 +17,44 @@ from accounts.models import (
     WeeklyPlan,
     Weekday,
 )
+
+logger = logging.getLogger(__name__)
+
+
+def exponential_backoff_retry(max_retries=3, base_delay=2):
+    """Decorator for exponential backoff retry on quota errors (429).
+    
+    Args:
+        max_retries: Maximum number of retries (default: 3)
+        base_delay: Base delay in seconds, doubles each retry (default: 2s)
+    
+    Retry delays: 2s, 4s, 8s for default configuration.
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            retries = 0
+            while retries <= max_retries:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    error_message = str(e)
+                    is_quota_error = "429" in error_message or "quota" in error_message.lower()
+                    
+                    if is_quota_error and retries < max_retries:
+                        delay = base_delay * (2 ** retries)
+                        logger.warning(
+                            f"Quota error (429) on attempt {retries + 1}/{max_retries + 1}. "
+                            f"Retrying in {delay}s..."
+                        )
+                        time.sleep(delay)
+                        retries += 1
+                    else:
+                        raise
+            
+            raise Exception(_("Max retries exceeded for Gemini API call"))
+        return wrapper
+    return decorator
 
 
 class RoutineGeneratorService:
@@ -65,7 +106,7 @@ class RoutineGeneratorService:
             last_parse_error = None
             plan_data = None
 
-            for attempt in range(3):
+            for attempt in range(1):
                 ai_response = self._call_gemini_api(prompt)
                 try:
                     plan_data = self._parse_ai_response(ai_response)
@@ -74,7 +115,11 @@ class RoutineGeneratorService:
                     last_parse_error = parse_error
 
             if plan_data is None and last_parse_error is not None:
-                raise last_parse_error
+                plan_data = self._generate_plan_day_by_day(
+                    user=user,
+                    available_exercises=available_exercises,
+                    training_days=training_days,
+                )
 
             result = self._create_routine_in_database(
                 user=user,
@@ -114,20 +159,65 @@ class RoutineGeneratorService:
         except User.DoesNotExist:
             raise ValueError(_("User with ID %(id)s does not exist") % {"id": user_id})
 
-    def _get_available_exercises(self, user: User) -> List[Dict]:
-        """Filter exercises based on user's available equipment."""
+    def _get_available_exercises(self, user: User, limit: int = 20) -> List[Dict]:
+        """Filter exercises based on user's available equipment.
+        
+        Args:
+            user: User instance with preferred equipment
+            limit: Maximum number of exercises to return (default: 20)
+                   Prevents context window saturation in Gemini prompts
+        
+        Returns:
+            List of exercise dictionaries, prioritized by relevance
+        """
         equipment_ids = user.preferred_equipment.values_list("id", flat=True)
 
         if not equipment_ids:
             return []
 
+        # Get all available exercises
         available_exercises = (
             Exercise.objects.filter(equipment__id__in=equipment_ids)
             .distinct()
             .values("id", "name", "muscle_group", "difficulty", "description")
         )
 
-        return list(available_exercises)
+        exercises_list = list(available_exercises)
+        
+        # Optimize: limit to most relevant exercises to avoid token saturation
+        if len(exercises_list) > limit:
+            logger.info(
+                f"Optimizing exercise list from {len(exercises_list)} to {limit} exercises "
+                f"to prevent context window saturation"
+            )
+            
+            # Prioritization strategy:
+            # 1. Match user difficulty level first
+            # 2. Distribute across muscle groups
+            # 3. Prefer compound movements (full_body, legs, back, chest)
+            
+            priority_muscle_groups = ["FULL_BODY", "LEGS", "BACK", "CHEST", "SHOULDERS"]
+            user_difficulty = user.level if hasattr(user, 'level') else "INTERMEDIATE"
+            
+            # Score exercises
+            scored_exercises = []
+            for ex in exercises_list:
+                score = 0
+                # Difficulty match
+                if ex.get("difficulty") == user_difficulty:
+                    score += 3
+                # Priority muscle group
+                if ex.get("muscle_group") in priority_muscle_groups:
+                    score += priority_muscle_groups.index(ex.get("muscle_group", "")) + 2
+                scored_exercises.append((score, ex))
+            
+            # Sort by score (descending) and take top N
+            scored_exercises.sort(key=lambda x: x[0], reverse=True)
+            exercises_list = [ex for _, ex in scored_exercises[:limit]]
+            
+            logger.debug(f"Selected top {len(exercises_list)} exercises based on user profile")
+
+        return exercises_list
 
     def _build_prompt(
         self, user: User, available_exercises: List[Dict], training_days: int
@@ -204,13 +294,101 @@ Return ONLY the JSON with no extra text."""
 
         return prompt
 
+    def _build_day_prompt(
+        self,
+        user: User,
+        available_exercises: List[Dict],
+        training_days: int,
+        day_number: int,
+        previous_muscle_groups: List[str],
+    ) -> str:
+        """Build a compact prompt for a single training day."""
+        exercise_list = "\n".join(
+            [
+                f"- ID: {ex['id']} | Name: {ex['name']} | Group: {ex['muscle_group']}"
+                for ex in available_exercises
+            ]
+        )
+
+        exercise_count_map = {
+            "BEGINNER": 3,
+            "INTERMEDIATE": 4,
+            "ADVANCED": 5,
+        }
+        series_map = {
+            "BEGINNER": 3,
+            "INTERMEDIATE": 4,
+            "ADVANCED": 4,
+        }
+        repetitions_map = {
+            "BEGINNER": "10-12",
+            "INTERMEDIATE": "8-12",
+            "ADVANCED": "6-10",
+        }
+        rest_map = {
+            "BEGINNER": 90,
+            "INTERMEDIATE": 60,
+            "ADVANCED": 45,
+        }
+
+        blocked_groups = ", ".join(previous_muscle_groups) if previous_muscle_groups else "none"
+
+        return f"""Return ONLY valid JSON for day {day_number} of a {training_days}-day training plan.
+
+User goal: {user.goal}
+User level: {user.level}
+Avoid using these main muscle groups as primary focus from the previous day: {blocked_groups}
+
+Available exercises:
+{exercise_list}
+
+Rules:
+1. Use ONLY exercise IDs from the list.
+2. Do NOT invent exercises.
+3. Prioritize a different muscle focus than the previous day.
+4. Return exactly {exercise_count_map.get(user.level, 3)} exercises.
+5. Use {series_map.get(user.level, 3)} series per exercise unless variation is needed.
+6. Use repetitions near {repetitions_map.get(user.level, '10-12')}.
+7. Use rest around {rest_map.get(user.level, 60)} seconds.
+8. Keep notes very short (max 8 words).
+
+Required JSON schema:
+{{
+  "day": {day_number},
+  "day_name": "Day {day_number} - [main focus]",
+  "exercises": [
+    {{
+      "exercise_id": 1,
+      "series": {series_map.get(user.level, 3)},
+      "repetitions": "{repetitions_map.get(user.level, '10-12')}",
+      "rest_seconds": {rest_map.get(user.level, 60)},
+      "order": 1,
+      "notes": "Short tip"
+    }}
+  ]
+}}"""
+
+    @exponential_backoff_retry(max_retries=3, base_delay=2)
     def _call_gemini_api(self, prompt: str) -> str:
-        """Call Gemini AI and return text response."""
+        """Call Gemini AI and return text response.
+        
+        Includes exponential backoff retry for quota errors (429):
+        - Attempt 1: immediate
+        - Attempt 2: wait 2s
+        - Attempt 3: wait 4s
+        - Attempt 4: wait 8s
+        
+        Logs response time for performance monitoring.
+        """
+        start_time = time.time()
+        
         try:
+            logger.info(f"Calling Gemini API with model: {settings.GEMINI_MODEL}")
+            
             response = self.model.generate_content(
                 prompt,
                 generation_config=genai.types.GenerationConfig(
-                    temperature=0.2,
+                    temperature=settings.GEMINI_TEMPERATURE,
                     top_p=0.8,
                     top_k=40,
                     max_output_tokens=4096,
@@ -218,27 +396,87 @@ Return ONLY the JSON with no extra text."""
                 ),
             )
 
+            elapsed_time = time.time() - start_time
+            response_length = len(response.text) if response.text else 0
+            
+            logger.info(
+                f"Gemini API responded successfully in {elapsed_time:.2f}s. "
+                f"Response length: {response_length} characters"
+            )
+            
             return response.text
 
         except Exception as e:
+            elapsed_time = time.time() - start_time
+            error_message = str(e)
+            
+            logger.error(
+                f"Gemini API error after {elapsed_time:.2f}s: {error_message[:200]}"
+            )
+            
+            if "429" in error_message or "quota" in error_message.lower():
+                # Re-raise to trigger exponential backoff decorator
+                raise
+            
             raise Exception(_("Error communicating with Gemini AI: %(error)s") % {"error": str(e)})
+
+    def _clean_ai_json_text(self, response_text: str) -> str:
+        """Normalize raw Gemini text before JSON parsing.
+        
+        Handles multiple markdown code block formats:
+        - ```json ... ```
+        - ``` ... ```
+        - Plain JSON
+        - JSON with leading/trailing text
+        
+        This method is designed to be infalible against common Gemini response formats.
+        """
+        if not response_text:
+            return "{}"
+        
+        cleaned = response_text.strip()
+        
+        # Strategy 1: Remove markdown code blocks (multiple variants)
+        # Handle ```json
+        if cleaned.startswith("```json"):
+            cleaned = cleaned[7:]
+        # Handle ```javascript, ```typescript, etc.
+        elif cleaned.startswith("```") and cleaned[3:].split()[0].isalpha():
+            first_newline = cleaned.find("\n")
+            if first_newline > 0:
+                cleaned = cleaned[first_newline + 1:]
+        # Handle plain ```
+        elif cleaned.startswith("```"):
+            cleaned = cleaned[3:]
+        
+        # Remove closing ```
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+        
+        # Remove any remaining tick marks at boundaries
+        cleaned = cleaned.strip("`")
+        cleaned = cleaned.strip()
+        
+        # Strategy 2: Extract JSON object if embedded in text
+        if "{" in cleaned and "}" in cleaned:
+            start_pos = cleaned.find("{")
+            end_pos = cleaned.rfind("}") + 1
+            
+            # Validate we have a complete JSON structure
+            if start_pos >= 0 and end_pos > start_pos:
+                cleaned = cleaned[start_pos:end_pos]
+        
+        # Strategy 3: Remove common prefixes/suffixes
+        cleaned = cleaned.strip()
+        
+        logger.debug(f"Cleaned JSON length: {len(cleaned)} characters")
+        
+        return cleaned
 
     def _parse_ai_response(self, response_text: str) -> Dict:
         """Parse Gemini response into validated JSON."""
         try:
-            cleaned = response_text.strip()
-            if cleaned.startswith("```json"):
-                cleaned = cleaned[7:]
-            if cleaned.startswith("```"):
-                cleaned = cleaned[3:]
-            if cleaned.endswith("```"):
-                cleaned = cleaned[:-3]
-
-            cleaned = cleaned.strip()
-
-            if "{" in cleaned and "}" in cleaned:
-                cleaned = cleaned[cleaned.find("{") : cleaned.rfind("}") + 1]
-
+            cleaned = self._clean_ai_json_text(response_text)
             data = json.loads(cleaned)
 
             weekly_plan_key = "weekly_plan" if "weekly_plan" in data else "plan_semanal"
@@ -263,6 +501,96 @@ Return ONLY the JSON with no extra text."""
 
         except json.JSONDecodeError as e:
             raise ValueError(_("AI response is not valid JSON: %(error)s") % {"error": str(e)})
+
+    def _parse_ai_day_response(self, response_text: str, expected_day: int) -> Dict:
+        """Parse a single-day Gemini JSON response."""
+        cleaned = self._clean_ai_json_text(response_text)
+        raw_data = json.loads(cleaned)
+
+        if "weekly_plan" in raw_data or "plan_semanal" in raw_data:
+            data = self._parse_ai_response(cleaned)
+
+            if "weekly_plan" in data:
+                day_data = data["weekly_plan"][0]
+            else:
+                day_data = data["plan_semanal"][0]
+        else:
+            day_data = raw_data
+
+        exercises_key = "exercises" if "exercises" in day_data else "ejercicios"
+        if "day" not in day_data and "dia" not in day_data:
+            raise ValueError(_("AI day response does not contain 'day'"))
+        if exercises_key not in day_data or not isinstance(day_data[exercises_key], list):
+            raise ValueError(_("AI day response does not contain a valid exercises list"))
+
+        day_number = day_data.get("day", day_data.get("dia"))
+        if day_number != expected_day:
+            day_data["day"] = expected_day
+
+        return day_data
+
+    def _extract_day_muscle_groups(
+        self, day_data: Dict, available_exercises: List[Dict]
+    ) -> List[str]:
+        """Infer muscle groups used in a generated day."""
+        exercise_map = {exercise["id"]: exercise for exercise in available_exercises}
+        muscle_groups = []
+
+        for exercise_data in day_data.get("exercises", day_data.get("ejercicios", [])):
+            exercise_id = exercise_data.get("exercise_id", exercise_data.get("ejercicio_id"))
+            exercise = exercise_map.get(exercise_id)
+            if exercise and exercise["muscle_group"] not in muscle_groups:
+                muscle_groups.append(exercise["muscle_group"])
+
+        return muscle_groups
+
+    def _generate_plan_day_by_day(
+        self, user: User, available_exercises: List[Dict], training_days: int
+    ) -> Dict:
+        """Fallback generator that requests one training day at a time."""
+        weekly_plan = []
+        previous_muscle_groups: List[str] = []
+
+        for day_number in range(1, training_days + 1):
+            day_prompt = self._build_day_prompt(
+                user=user,
+                available_exercises=available_exercises,
+                training_days=training_days,
+                day_number=day_number,
+                previous_muscle_groups=previous_muscle_groups,
+            )
+
+            last_error = None
+            day_data = None
+
+            for day_attempt in range(2):
+                ai_response = self._call_gemini_api(day_prompt)
+                try:
+                    day_data = self._parse_ai_day_response(ai_response, day_number)
+                    break
+                except ValueError as parse_error:
+                    last_error = parse_error
+
+            if day_data is None and last_error is not None:
+                raise last_error
+
+            previous_muscle_groups = self._extract_day_muscle_groups(
+                day_data, available_exercises
+            )
+            weekly_plan.append(day_data)
+
+        duration_map = {
+            "BEGINNER": 45,
+            "INTERMEDIATE": 60,
+            "ADVANCED": 75,
+        }
+
+        return {
+            "weekly_plan": weekly_plan,
+            "estimated_duration_minutes": duration_map.get(user.level, 45),
+            "recommended_level": user.level,
+            "observations": "AI-generated plan based on your profile and available equipment.",
+        }
 
     @transaction.atomic
     def _create_routine_in_database(
