@@ -771,7 +771,7 @@ Required JSON schema:
             day_number = day_data.get("day", day_data.get("dia"))
             day_exercises = day_data.get("exercises", day_data.get("ejercicios", []))
             day_index = max(0, int(day_number or 1) - 1)
-            weekday_value = selected_weekdays[day_index] if day_index < len(selected_weekdays) else selected_weekdays[-1]
+            weekday_value = selected_weekdays[day_index]
 
             day_routine = Routine.objects.create(
                 name=day_data.get("day_name", day_data.get("nombre_dia", f"{routine_name} - Day {day_number}")),
