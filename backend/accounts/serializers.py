@@ -268,17 +268,21 @@ class UserSerializer(serializers.ModelSerializer):
         return super().to_internal_value(normalized_data)
 
     def update(self, instance, validated_data):
-        training_weekdays = validated_data.pop("training_weekdays_input", None)
-        instance = super().update(instance, validated_data)
+        from django.db import transaction
 
-        if training_weekdays is not None:
-            UserTrainingWeekday.objects.filter(user=instance).delete()
-            UserTrainingWeekday.objects.bulk_create(
-                [
-                    UserTrainingWeekday(user=instance, weekday=weekday)
-                    for weekday in training_weekdays
-                ]
-            )
+        training_weekdays = validated_data.pop("training_weekdays_input", None)
+
+        with transaction.atomic():
+            instance = super().update(instance, validated_data)
+
+            if training_weekdays is not None:
+                UserTrainingWeekday.objects.filter(user=instance).delete()
+                UserTrainingWeekday.objects.bulk_create(
+                    [
+                        UserTrainingWeekday(user=instance, weekday=weekday)
+                        for weekday in training_weekdays
+                    ]
+                )
 
         return instance
 
