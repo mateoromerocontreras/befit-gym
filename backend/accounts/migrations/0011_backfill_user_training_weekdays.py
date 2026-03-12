@@ -21,8 +21,10 @@ def backfill_user_training_weekdays(apps, schema_editor):
 
 
 def reverse_backfill_user_training_weekdays(apps, schema_editor):
-    UserTrainingWeekday = apps.get_model("accounts", "UserTrainingWeekday")
-    UserTrainingWeekday.objects.filter(weekday__in=[1, 3, 5]).delete()
+    # This reverse migration is a no-op to prevent accidental data loss.
+    # The forward migration adds default days only if none exist,
+    # so reversing it by deleting specific weekdays for all users is too broad.
+    pass
 
 
 class Migration(migrations.Migration):
