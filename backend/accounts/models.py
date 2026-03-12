@@ -226,6 +226,23 @@ class Weekday(models.IntegerChoices):
     SUNDAY = 7, "Sunday"
 
 
+class UserTrainingWeekday(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="training_weekdays"
+    )
+    weekday = models.IntegerField(choices=Weekday.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "User Training Weekday"
+        verbose_name_plural = "User Training Weekdays"
+        ordering = ["weekday"]
+        unique_together = ["user", "weekday"]
+
+    def __str__(self):
+        return f"{self.user.email} - {Weekday(self.weekday).label}"
+
+
 class WeeklyPlan(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="weekly_plans"
@@ -259,3 +276,4 @@ Rutina = Routine
 RutinaEjercicio = RoutineExercise
 DiaSemana = Weekday
 PlanSemanal = WeeklyPlan
+DiaEntrenamientoUsuario = UserTrainingWeekday

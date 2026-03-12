@@ -10,6 +10,7 @@ from .views import (
     EquipmentViewSet,
     UserEquipmentSelectionView,
     GenerateRoutineView,
+    GenerateRoutinePrecheckView,
     UserProfileView,
 )
 
@@ -35,6 +36,11 @@ urlpatterns = [
         name="user-equipamiento",
     ),
     path("generate-routine/", GenerateRoutineView.as_view(), name="generate-routine"),
+    path(
+        "generate-routine-precheck/",
+        GenerateRoutinePrecheckView.as_view(),
+        name="generate-routine-precheck",
+    ),
     path("generar-rutina/", GenerateRoutineView.as_view(), name="generar-rutina"),
     # API endpoints (router) - English primary routes
     path("", include(router.urls)),

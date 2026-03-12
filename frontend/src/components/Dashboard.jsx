@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import PlanSemanal from './PlanSemanal';
+import WeeklyCalendarView from './WeeklyCalendarView';
 import profileService from '../services/profileService';
 import planService from '../services/planService';
-import { Sparkles, Loader, AlertCircle, CheckCircle, Dumbbell, Calendar, Target } from 'lucide-react';
+import { Sparkles, Loader, AlertCircle, CheckCircle, Dumbbell } from 'lucide-react';
 
 const Dashboard = () => {
     const { user } = useAuth();
-    const navigate = useNavigate();
     const [planSemanal, setPlanSemanal] = useState([]);
     const [loadingPlan, setLoadingPlan] = useState(true);
     const [generating, setGenerating] = useState(false);
@@ -21,8 +19,8 @@ const Dashboard = () => {
     const loadPlanSemanal = async () => {
         try {
             setLoadingPlan(true);
-            const data = await planService.getPlanSemanal();
-            setPlanSemanal(data.results || data);
+            const data = await planService.getWeeklyPlan();
+            setPlanSemanal(data);
         } catch (error) {
             console.error('Error loading plan semanal:', error);
             setPlanSemanal([]);
@@ -31,12 +29,69 @@ const Dashboard = () => {
         }
     };
 
+    const extractErrorMessage = (error) => {
+        const data = error?.response?.data;
+        if (!data) {
+            return 'Error al comunicarse con el servidor';
+        }
+
+        if (typeof data === 'string') {
+            return data;
+        }
+
+        if (data.error) {
+            return data.error;
+        }
+
+        if (data.message) {
+            return data.message;
+        }
+
+        if (data.detail) {
+            return data.detail;
+        }
+
+        const firstFieldError = Object.values(data).find((value) => Array.isArray(value) && value.length > 0);
+        if (firstFieldError) {
+            return firstFieldError[0];
+        }
+
+        return 'No se pudo generar la rutina en este momento';
+    };
+
     const handleGenerateRoutine = async () => {
         setGenerating(true);
         setMessage(null);
 
         try {
-            const result = await profileService.generateRoutine(3);
+            const selectedWeekdays = user?.training_weekdays || user?.dias_entrenamiento || [1, 3, 5];
+
+            const precheck = await profileService.getGenerateRoutinePrecheck(
+                selectedWeekdays.length,
+                selectedWeekdays
+            );
+
+            if (!precheck.ready) {
+                const messages = {
+                    api_key: 'Falta configurar GEMINI_API_KEY en backend.',
+                    equipment: 'Selecciona equipamiento en tu perfil antes de generar la rutina con IA.',
+                    compatible_exercises: 'No hay ejercicios compatibles con tu equipamiento actual.',
+                    training_weekdays: 'Selecciona al menos un día de entrenamiento en tu perfil.'
+                };
+                const firstMissing = precheck.missing?.[0];
+
+                setMessage({
+                    type: 'error',
+                    text: messages[firstMissing] || 'No se cumplen los requisitos para generar rutina.'
+                });
+                return;
+            }
+
+            const result = await profileService.generateRoutine(
+                selectedWeekdays.length,
+                null,
+                selectedWeekdays
+            );
 
             if (result.success) {
                 setMessage({
@@ -57,7 +112,7 @@ const Dashboard = () => {
             }
         } catch (error) {
             console.error('Error generating routine:', error);
-            const errorMsg = error.response?.data?.error || 'Error al comunicarse con el servidor';
+            const errorMsg = extractErrorMessage(error);
             setMessage({
                 type: 'error',
                 text: errorMsg
@@ -107,75 +162,47 @@ const Dashboard = () => {
                     </div>
                 )}
 
-                {/* Plan Semanal o Empty State */}
+                <div className="mb-6">
+                    <button
+                        onClick={handleGenerateRoutine}
+                        disabled={generating}
+                        className={`
+                            group relative inline-flex items-center gap-3 px-6 py-3 rounded-xl font-bold
+                            transition-all duration-200 overflow-hidden
+                            ${generating
+                                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-accent-lime to-yellow-300 hover:from-yellow-300 hover:to-accent-lime text-gray-900 shadow-xl shadow-accent-lime/40 hover:shadow-accent-lime/60'
+                            }
+                        `}
+                    >
+                        {generating ? (
+                            <>
+                                <Loader className="w-5 h-5 animate-spin" />
+                                <span>Generando con IA...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                                <span>Generar Plan con IA</span>
+                            </>
+                        )}
+                    </button>
+                </div>
+
                 {loadingPlan ? (
                     <div className="flex items-center justify-center py-12">
                         <Loader className="w-8 h-8 text-accent-lime animate-spin" />
                     </div>
-                ) : hasActivePlan ? (
-                    <PlanSemanal />
                 ) : (
-                    /* Empty State */
-                    <div className="bg-gray-900/50 rounded-2xl p-12 border-2 border-dashed border-gray-700 text-center mb-8">
-                        <div className="max-w-md mx-auto">
-                            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-accent-lime/20 to-accent-electric/20 flex items-center justify-center">
-                                <Dumbbell className="w-10 h-10 text-accent-lime" />
+                    <>
+                        {!hasActivePlan && (
+                            <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800 mb-6 text-gray-300 flex items-center gap-3">
+                                <Dumbbell className="w-5 h-5 text-accent-lime" />
+                                <span>No tienes rutina asignada todavía. Los días se mostrarán como Rest Day.</span>
                             </div>
-                            <h3 className="text-2xl font-bold text-white mb-3">
-                                No tienes un plan activo
-                            </h3>
-                            <p className="text-gray-400 mb-6">
-                                Genera tu plan de entrenamiento personalizado con IA en segundos.
-                                La inteligencia artificial creará rutinas adaptadas a tu nivel y objetivos.
-                            </p>
-
-                            <button
-                                onClick={handleGenerateRoutine}
-                                disabled={generating}
-                                className={`
-                                    group relative inline-flex items-center gap-3 px-8 py-4 rounded-xl font-bold text-lg
-                                    transition-all duration-200 overflow-hidden
-                                    ${generating
-                                        ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-accent-lime to-yellow-300 hover:from-yellow-300 hover:to-accent-lime text-gray-900 shadow-2xl shadow-accent-lime/50 hover:shadow-accent-lime/70 hover:scale-105 active:scale-95'
-                                    }
-                                `}
-                            >
-                                {generating ? (
-                                    <>
-                                        <Loader className="w-6 h-6 animate-spin" />
-                                        <span>Generando con IA...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                                        <span>Generar Plan con IA</span>
-                                    </>
-                                )}
-                            </button>
-
-                            <div className="mt-8 grid grid-cols-3 gap-4 text-sm">
-                                <div className="text-center">
-                                    <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-accent-lime/10 flex items-center justify-center">
-                                        <Calendar className="w-6 h-6 text-accent-lime" />
-                                    </div>
-                                    <p className="text-gray-400">3 días por semana</p>
-                                </div>
-                                <div className="text-center">
-                                    <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-accent-electric/10 flex items-center justify-center">
-                                        <Target className="w-6 h-6 text-accent-electric" />
-                                    </div>
-                                    <p className="text-gray-400">Personalizado</p>
-                                </div>
-                                <div className="text-center">
-                                    <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                                        <Sparkles className="w-6 h-6 text-blue-400" />
-                                    </div>
-                                    <p className="text-gray-400">Con IA</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        )}
+                        <WeeklyCalendarView weeklyPlan={planSemanal} />
+                    </>
                 )}
 
                 {/* Quick Stats */}

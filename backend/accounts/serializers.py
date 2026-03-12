@@ -10,6 +10,8 @@ from .models import (
     Equipment,
     TrainingGoal,
     TrainingLevel,
+    UserTrainingWeekday,
+    Weekday,
 )
 
 User = get_user_model()
@@ -87,6 +89,18 @@ class GenerateRoutineSerializer(serializers.Serializer):
         allow_blank=True,
         help_text=_("Custom routine name"),
     )
+    training_weekdays = serializers.ListField(
+        child=serializers.IntegerField(min_value=1, max_value=7),
+        required=False,
+        allow_empty=False,
+        help_text=_("Preferred weekdays (1=Monday ... 7=Sunday)"),
+    )
+
+    def validate_training_weekdays(self, value):
+        unique_days = list(dict.fromkeys(value))
+        if len(unique_days) != len(value):
+            raise serializers.ValidationError(_("Training weekdays cannot contain duplicates"))
+        return sorted(unique_days)
 
     def to_internal_value(self, data):
         normalized_data = dict(data)
@@ -94,6 +108,8 @@ class GenerateRoutineSerializer(serializers.Serializer):
             normalized_data["training_days"] = normalized_data["dias_semana"]
         if "routine_name" not in normalized_data and "nombre_rutina" in normalized_data:
             normalized_data["routine_name"] = normalized_data["nombre_rutina"]
+        if "training_weekdays" not in normalized_data and "dias_entrenamiento" in normalized_data:
+            normalized_data["training_weekdays"] = normalized_data["dias_entrenamiento"]
         return super().to_internal_value(normalized_data)
 
 
@@ -155,6 +171,14 @@ class UserSerializer(serializers.ModelSerializer):
     objetivo = serializers.CharField(source="goal", read_only=True)
     nivel = serializers.CharField(source="level", read_only=True)
     suscripcion_activa = serializers.BooleanField(source="active_subscription", read_only=True)
+    training_weekdays = serializers.SerializerMethodField()
+    training_weekdays_input = serializers.ListField(
+        child=serializers.IntegerField(min_value=1, max_value=7),
+        required=False,
+        allow_empty=False,
+        write_only=True,
+    )
+    dias_entrenamiento = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -177,9 +201,31 @@ class UserSerializer(serializers.ModelSerializer):
             "nivel",
             "nivel_display",
             "suscripcion_activa",
+            "training_weekdays",
+            "training_weekdays_input",
+            "dias_entrenamiento",
             "date_joined",
         )
         read_only_fields = ("id", "email", "date_joined")
+
+    def get_training_weekdays(self, instance):
+        return list(
+            instance.training_weekdays.values_list("weekday", flat=True).order_by("weekday")
+        )
+
+    def get_dias_entrenamiento(self, instance):
+        return self.get_training_weekdays(instance)
+
+    def validate_training_weekdays_input(self, value):
+        unique_days = list(dict.fromkeys(value))
+        if len(unique_days) != len(value):
+            raise serializers.ValidationError(_("Training weekdays cannot contain duplicates"))
+        invalid_days = [day for day in unique_days if day not in [choice.value for choice in Weekday]]
+        if invalid_days:
+            raise serializers.ValidationError(
+                _("Invalid weekdays: %(days)s") % {"days": invalid_days}
+            )
+        return sorted(unique_days)
 
     def to_internal_value(self, data):
         normalized_data = dict(data)
@@ -189,6 +235,8 @@ class UserSerializer(serializers.ModelSerializer):
             "edad": "age",
             "objetivo": "goal",
             "nivel": "level",
+            "dias_entrenamiento": "training_weekdays_input",
+            "training_weekdays": "training_weekdays_input",
         }
         for old_key, new_key in alias_map.items():
             if new_key not in normalized_data and old_key in normalized_data:
@@ -218,6 +266,21 @@ class UserSerializer(serializers.ModelSerializer):
                 normalized_data["level"], normalized_data["level"]
             )
         return super().to_internal_value(normalized_data)
+
+    def update(self, instance, validated_data):
+        training_weekdays = validated_data.pop("training_weekdays_input", None)
+        instance = super().update(instance, validated_data)
+
+        if training_weekdays is not None:
+            UserTrainingWeekday.objects.filter(user=instance).delete()
+            UserTrainingWeekday.objects.bulk_create(
+                [
+                    UserTrainingWeekday(user=instance, weekday=weekday)
+                    for weekday in training_weekdays
+                ]
+            )
+
+        return instance
 
 
 # Training Plan serializers
@@ -444,6 +507,55 @@ class WeeklyPlanListSerializer(serializers.ModelSerializer):
 
     def get_total_ejercicios(self, obj):
         return obj.routine.exercises.count()
+
+
+class WeeklyPlanExerciseCalendarSerializer(serializers.ModelSerializer):
+    """Exercise payload optimized for weekly calendar UI."""
+
+    name = serializers.CharField(source="exercise.name", read_only=True)
+    muscle_group = serializers.CharField(source="exercise.muscle_group", read_only=True)
+    difficulty = serializers.CharField(source="exercise.difficulty", read_only=True)
+
+    class Meta:
+        model = RoutineExercise
+        fields = (
+            "id",
+            "name",
+            "muscle_group",
+            "difficulty",
+            "series",
+            "repetitions",
+            "order",
+            "notes",
+        )
+
+
+class WeeklyPlanCalendarSerializer(serializers.ModelSerializer):
+    """Weekly plan serializer for calendar view on dashboard."""
+
+    day = serializers.IntegerField(source="weekday", read_only=True)
+    day_name = serializers.SerializerMethodField()
+    focus = serializers.CharField(source="routine.name", read_only=True)
+    exercises = WeeklyPlanExerciseCalendarSerializer(
+        source="routine.routine_exercises", many=True, read_only=True
+    )
+
+    class Meta:
+        model = WeeklyPlan
+        fields = (
+            "id",
+            "day",
+            "day_name",
+            "focus",
+            "active",
+            "notes",
+            "exercises",
+        )
+
+    def get_day_name(self, obj):
+        routine_name = obj.routine.name if obj.routine else ""
+        weekday_name = obj.get_weekday_display()
+        return f"{weekday_name} - {routine_name}" if routine_name else weekday_name
 
 
 # Backward-compatibility aliases (Phase 1)

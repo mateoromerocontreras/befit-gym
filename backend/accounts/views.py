@@ -12,7 +12,7 @@ from .serializers import (
     ExerciseSerializer,
     RoutineSerializer,
     WeeklyPlanSerializer,
-    WeeklyPlanListSerializer,
+    WeeklyPlanCalendarSerializer,
     EquipmentSerializer,
     UserEquipmentSelectionSerializer,
     GenerateRoutineSerializer,
@@ -134,14 +134,14 @@ class WeeklyPlanViewSet(viewsets.ReadOnlyModelViewSet):
         return (
             WeeklyPlan.objects.filter(user=self.request.user)
             .select_related("routine")
-            .prefetch_related("routine__routine_exercises__exercise__equipment")
+            .prefetch_related("routine__routine_exercises__exercise")
             .order_by("weekday")
         )
 
     def get_serializer_class(self):
-        """Use simplified serializer for list, full serializer for detail."""
+        """Use calendar serializer for list, full serializer for detail."""
         if self.action == "list":
-            return WeeklyPlanListSerializer
+            return WeeklyPlanCalendarSerializer
         return WeeklyPlanSerializer
 
 
@@ -214,6 +214,7 @@ class GenerateRoutineView(APIView):
 
         training_days = serializer.validated_data.get("training_days", 3)
         routine_name = serializer.validated_data.get("routine_name", None)
+        training_weekdays = serializer.validated_data.get("training_weekdays", None)
 
         try:
             generator = RoutineGeneratorService()
@@ -221,16 +222,60 @@ class GenerateRoutineView(APIView):
                 user_id=request.user.id,
                 training_days=training_days,
                 routine_name=routine_name,
+                training_weekdays=training_weekdays,
             )
 
             if result["success"]:
                 return Response(result, status=status.HTTP_201_CREATED)
             else:
+                error_text = str(result.get("error", ""))
+                if "QUOTA_EXCEEDED" in error_text or "429" in error_text or "quota" in error_text.lower():
+                    return Response(
+                        {
+                            "error": result.get("message") or result.get("error"),
+                            "code": "QUOTA_EXCEEDED",
+                        },
+                        status=status.HTTP_429_TOO_MANY_REQUESTS,
+                    )
                 return Response(
                     {"error": result.get("error", _("Unknown error"))},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": _("Internal error: %(error)s") % {"error": str(e)}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class GenerateRoutinePrecheckView(APIView):
+    """Validate prerequisites before generating AI routine."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        training_days_param = request.query_params.get("training_days")
+        weekdays_param = request.query_params.get("training_weekdays", "")
+
+        training_days = int(training_days_param) if training_days_param else 3
+        training_weekdays = None
+
+        if weekdays_param:
+            training_weekdays = [
+                int(item.strip()) for item in weekdays_param.split(",") if item.strip().isdigit()
+            ]
+
+        try:
+            generator = RoutineGeneratorService(raise_on_missing_key=False)
+            result = generator.get_generation_precheck(
+                user_id=request.user.id,
+                training_days=training_days,
+                training_weekdays=training_weekdays,
+            )
+            return Response(result, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:

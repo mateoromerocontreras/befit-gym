@@ -3,6 +3,10 @@ import axios from 'axios';
 const API_URL = 'http://localhost:8000/api/auth';
 
 class AuthService {
+    hasValidSession() {
+        return !!this.getAccessToken();
+    }
+
     async register(dataOrEmail, password, password2) {
         const payload = typeof dataOrEmail === 'object'
             ? dataOrEmail
@@ -44,6 +48,11 @@ class AuthService {
     }
 
     getCurrentUser() {
+        if (!this.hasValidSession()) {
+            localStorage.removeItem('user');
+            return null;
+        }
+
         const userStr = localStorage.getItem('user');
         if (userStr) return JSON.parse(userStr);
         return null;

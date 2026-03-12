@@ -6,11 +6,14 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const hasToken = !!authService.getAccessToken();
 
     useEffect(() => {
         const currentUser = authService.getCurrentUser();
         if (currentUser) {
             setUser(currentUser);
+        } else {
+            setUser(null);
         }
         setLoading(false);
     }, []);
@@ -74,7 +77,7 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         loading,
-        isAuthenticated: !!user
+        isAuthenticated: !!user && hasToken
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
