@@ -367,8 +367,9 @@ class RutinaPlanSemanalAPITest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
-        self.assertEqual(response.data["results"][0]["dia_semana"], DiaSemana.LUNES)
-        self.assertIn("rutina_nombre", response.data["results"][0])
+        self.assertEqual(response.data["results"][0]["day"], DiaSemana.LUNES)
+        self.assertIn("day_name", response.data["results"][0])
+        self.assertIn("exercises", response.data["results"][0])
 
     def test_plan_semanal_detail_uses_detail_serializer(self):
         """Detalle debe incluir objeto rutina completo"""

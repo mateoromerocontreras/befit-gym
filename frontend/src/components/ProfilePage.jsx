@@ -32,8 +32,19 @@ const ProfilePage = () => {
         peso: '',
         altura: '',
         objetivo: 'GENERAL_HEALTH',
-        nivel: 'BEGINNER'
+        nivel: 'BEGINNER',
+        training_weekdays: [1, 3, 5]
     });
+
+    const weekdayOptions = [
+        { value: 1, label: 'Lun' },
+        { value: 2, label: 'Mar' },
+        { value: 3, label: 'Mié' },
+        { value: 4, label: 'Jue' },
+        { value: 5, label: 'Vie' },
+        { value: 6, label: 'Sáb' },
+        { value: 7, label: 'Dom' }
+    ];
 
     useEffect(() => {
         if (user) {
@@ -42,7 +53,8 @@ const ProfilePage = () => {
                 peso: user.peso || '',
                 altura: user.altura || '',
                 objetivo: user.objetivo || 'GENERAL_HEALTH',
-                nivel: user.nivel || 'BEGINNER'
+                nivel: user.nivel || 'BEGINNER',
+                training_weekdays: user.training_weekdays || user.dias_entrenamiento || [1, 3, 5]
             });
         }
     }, [user]);
@@ -55,19 +67,42 @@ const ProfilePage = () => {
         }));
     };
 
+    const toggleWeekday = (weekday) => {
+        setFormData((prev) => {
+            const exists = prev.training_weekdays.includes(weekday);
+            const nextDays = exists
+                ? prev.training_weekdays.filter((day) => day !== weekday)
+                : [...prev.training_weekdays, weekday];
+
+            return {
+                ...prev,
+                training_weekdays: nextDays.sort((a, b) => a - b)
+            };
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
         setMessage(null);
 
         try {
+            if (!formData.training_weekdays || formData.training_weekdays.length === 0) {
+                setMessage({
+                    type: 'error',
+                    text: 'Selecciona al menos un día de entrenamiento.'
+                });
+                return;
+            }
+
             // Preparar datos (convertir strings vacíos a null)
             const dataToSend = {
                 age: formData.edad ? parseInt(formData.edad) : null,
                 weight: formData.peso ? parseFloat(formData.peso) : null,
                 height: formData.altura ? parseFloat(formData.altura) : null,
                 goal: formData.objetivo,
-                level: formData.nivel
+                level: formData.nivel,
+                training_weekdays: formData.training_weekdays
             };
 
             const updatedUser = await profileService.updateUserProfile(dataToSend);
@@ -124,6 +159,37 @@ const ProfilePage = () => {
                         <div>
                             <h1 className="text-3xl font-bold text-white">Mi Perfil</h1>
                             <p className="text-gray-400">Configura tu información personal y objetivos</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
+                        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <Calendar className="w-5 h-5 text-accent-lime" />
+                            Días de Entrenamiento
+                        </h2>
+                        <p className="text-gray-400 text-sm mb-4">
+                            Selecciona los días en los que entrenas normalmente.
+                        </p>
+                        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                            {weekdayOptions.map((day) => {
+                                const isSelected = formData.training_weekdays.includes(day.value);
+                                return (
+                                    <button
+                                        key={day.value}
+                                        type="button"
+                                        onClick={() => toggleWeekday(day.value)}
+                                        className={`
+                                            px-3 py-2 rounded-lg text-sm font-semibold transition-all border
+                                            ${isSelected
+                                                ? 'bg-accent-lime text-gray-900 border-accent-lime'
+                                                : 'bg-gray-800 text-gray-300 border-gray-700 hover:border-gray-500'
+                                            }
+                                        `}
+                                    >
+                                        {day.label}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

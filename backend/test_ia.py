@@ -81,7 +81,7 @@ def validate_db_persistence(user, result):
         raise AssertionError("Los plan_ids retornados no coinciden con la BD")
 
     total_exercises = 0
-    expected_weekdays = list(range(1, TRAINING_DAYS + 1))
+    expected_weekdays = result.get("training_weekdays") or [1, 3, 5]
     current_weekdays = list(plans.values_list("weekday", flat=True))
     if current_weekdays != expected_weekdays:
         raise AssertionError(

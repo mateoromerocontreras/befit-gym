@@ -3,6 +3,22 @@ import axios from 'axios';
 const API_URL = 'http://localhost:8000/api/auth';
 
 class PlanService {
+    muscleGroupLabels = {
+        CHEST: 'Pecho',
+        BACK: 'Espalda',
+        LEGS: 'Piernas',
+        SHOULDERS: 'Hombros',
+        ARMS: 'Brazos',
+        CORE: 'Core',
+        FULL_BODY: 'Cuerpo completo'
+    };
+
+    difficultyLabels = {
+        BEGINNER: 'Principiante',
+        INTERMEDIATE: 'Intermedio',
+        ADVANCED: 'Avanzado'
+    };
+
     /**
      * Obtiene el header de autorización con el token JWT
      */
@@ -20,6 +36,17 @@ class PlanService {
             headers: this.getAuthHeader()
         });
         return response.data;
+    }
+
+    /**
+     * Obtiene el plan semanal en formato calendario
+     * @returns {Promise<Array>} Lista de días con ejercicios anidados
+     */
+    async getWeeklyPlan() {
+        const response = await axios.get(`${API_URL}/weekly-plan/`, {
+            headers: this.getAuthHeader()
+        });
+        return this.extractResults(response.data);
     }
 
     /**
@@ -91,6 +118,21 @@ class PlanService {
             };
         }
         return semana;
+    }
+
+    extractResults(payload) {
+        if (Array.isArray(payload)) {
+            return payload;
+        }
+        return payload?.results || [];
+    }
+
+    getMuscleGroupLabel(code) {
+        return this.muscleGroupLabels[code] || code || 'Sin grupo';
+    }
+
+    getDifficultyLabel(code) {
+        return this.difficultyLabels[code] || code || 'Sin nivel';
     }
 }
 

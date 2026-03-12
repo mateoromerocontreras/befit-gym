@@ -50,11 +50,14 @@ class ProfileService {
      * @param {string} nombreRutina - Nombre personalizado (opcional)
      * @returns {Promise<Object>} Resultado de la generación
      */
-    async generateRoutine(trainingDays = 3, routineName = null) {
+    async generateRoutine(trainingDays = 3, routineName = null, trainingWeekdays = null) {
         try {
             const payload = { training_days: trainingDays };
             if (routineName) {
                 payload.routine_name = routineName;
+            }
+            if (trainingWeekdays && trainingWeekdays.length > 0) {
+                payload.training_weekdays = trainingWeekdays;
             }
 
             const response = await axios.post(`${API_URL}/generate-routine/`, payload, {
@@ -63,6 +66,25 @@ class ProfileService {
             return response.data;
         } catch (error) {
             console.error('Error generating routine:', error);
+            throw error;
+        }
+    }
+
+    async getGenerateRoutinePrecheck(trainingDays = 3, trainingWeekdays = null) {
+        try {
+            const params = { training_days: trainingDays };
+            if (trainingWeekdays && trainingWeekdays.length > 0) {
+                params.training_weekdays = trainingWeekdays.join(',');
+            }
+
+            const response = await axios.get(`${API_URL}/generate-routine-precheck/`, {
+                headers: this.getAuthHeader(),
+                params,
+            });
+
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching routine precheck:', error);
             throw error;
         }
     }

@@ -5,6 +5,7 @@ import time
 import logging
 from functools import wraps
 from typing import Dict, List, Optional
+import re
 from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
@@ -16,18 +17,53 @@ from accounts.models import (
     RoutineExercise,
     WeeklyPlan,
     Weekday,
+    UserTrainingWeekday,
 )
 
 logger = logging.getLogger(__name__)
 
 
+def _extract_retry_seconds(error_message: str) -> Optional[int]:
+    """Extract retry delay in seconds from Gemini quota error text."""
+    patterns = [
+        r"retry in\s+([0-9]+(?:\.[0-9]+)?)s",
+        r"retry_delay\s*\{\s*seconds:\s*([0-9]+)\s*\}",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, error_message, flags=re.IGNORECASE | re.DOTALL)
+        if match:
+            return int(float(match.group(1)))
+
+    return None
+
+
+def _is_quota_error(error_message: str) -> bool:
+    lowered = error_message.lower()
+    return "429" in error_message or "quota" in lowered or "rate-limit" in lowered
+
+
+def _is_daily_quota_error(error_message: str) -> bool:
+    lowered = error_message.lower()
+    return "perday" in lowered or "daily" in lowered or "generaterequestsperday" in lowered
+
+
+def _format_quota_error(error_message: str) -> str:
+    retry_seconds = _extract_retry_seconds(error_message)
+    if retry_seconds:
+        return (
+            _("Gemini quota exceeded. Retry in approximately %(seconds)s seconds.")
+            % {"seconds": retry_seconds}
+        )
+    return _("Gemini quota exceeded. Please retry later or review your API billing/quota.")
+
 def exponential_backoff_retry(max_retries=3, base_delay=2):
     """Decorator for exponential backoff retry on quota errors (429).
-    
+
     Args:
         max_retries: Maximum number of retries (default: 3)
         base_delay: Base delay in seconds, doubles each retry (default: 2s)
-    
+
     Retry delays: 2s, 4s, 8s for default configuration.
     """
     def decorator(func):
@@ -39,10 +75,13 @@ def exponential_backoff_retry(max_retries=3, base_delay=2):
                     return func(*args, **kwargs)
                 except Exception as e:
                     error_message = str(e)
-                    is_quota_error = "429" in error_message or "quota" in error_message.lower()
-                    
-                    if is_quota_error and retries < max_retries:
-                        delay = base_delay * (2 ** retries)
+                    is_quota_error = _is_quota_error(error_message)
+                    is_daily_quota = _is_daily_quota_error(error_message)
+
+                    if is_quota_error and retries < max_retries and not is_daily_quota:
+                        exponential_delay = base_delay * (2 ** retries)
+                        retry_hint_delay = _extract_retry_seconds(error_message)
+                        delay = max(exponential_delay, retry_hint_delay or 0)
                         logger.warning(
                             f"Quota error (429) on attempt {retries + 1}/{max_retries + 1}. "
                             f"Retrying in {delay}s..."
@@ -51,7 +90,7 @@ def exponential_backoff_retry(max_retries=3, base_delay=2):
                         retries += 1
                     else:
                         raise
-            
+
             raise Exception(_("Max retries exceeded for Gemini API call"))
         return wrapper
     return decorator
@@ -60,23 +99,99 @@ def exponential_backoff_retry(max_retries=3, base_delay=2):
 class RoutineGeneratorService:
     """Generate personalized routines using Gemini AI."""
 
-    def __init__(self):
+    DEFAULT_TRAINING_WEEKDAYS = [
+        Weekday.MONDAY,
+        Weekday.WEDNESDAY,
+        Weekday.FRIDAY,
+    ]
+
+    def __init__(self, raise_on_missing_key: bool = True):
         """Initialize service and configure Gemini AI."""
         api_key = settings.GOOGLE_API_KEY
-        if not api_key:
+        self.model = None
+
+        if not api_key and raise_on_missing_key:
             raise ValueError(
                 _("GEMINI_API_KEY is not configured. ")
                 + _("Define the environment variable or add it in settings.py")
             )
 
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(settings.GEMINI_MODEL)
+        if api_key:
+            genai.configure(api_key=api_key)
+            self.model = genai.GenerativeModel(settings.GEMINI_MODEL)
+
+    def _get_user_training_weekdays(self, user: User) -> List[int]:
+        configured_days = list(
+            user.training_weekdays.values_list("weekday", flat=True).order_by("weekday")
+        )
+        if configured_days:
+            return configured_days
+        return [int(day) for day in self.DEFAULT_TRAINING_WEEKDAYS]
+
+    def _resolve_training_weekdays(
+        self,
+        user: User,
+        training_days: int,
+        training_weekdays: Optional[List[int]] = None,
+    ) -> List[int]:
+        if training_weekdays:
+            selected = sorted(list(dict.fromkeys(training_weekdays)))
+        else:
+            selected = self._get_user_training_weekdays(user)
+
+        selected = [int(day) for day in selected if 1 <= int(day) <= 7]
+
+        if not selected:
+            selected = [int(day) for day in self.DEFAULT_TRAINING_WEEKDAYS]
+
+        if training_days and training_days < len(selected):
+            selected = selected[:training_days]
+
+        return selected
+
+    def get_generation_precheck(
+        self,
+        user_id: int,
+        training_days: int = 3,
+        training_weekdays: Optional[List[int]] = None,
+    ) -> Dict:
+        user = self._get_user_profile(user_id)
+        selected_weekdays = self._resolve_training_weekdays(
+            user=user,
+            training_days=training_days,
+            training_weekdays=training_weekdays,
+        )
+        available_exercises = self._get_available_exercises(user)
+        equipment_count = user.preferred_equipment.count()
+        has_api_key = bool(settings.GOOGLE_API_KEY)
+
+        missing = []
+        if not has_api_key:
+            missing.append("api_key")
+        if equipment_count == 0:
+            missing.append("equipment")
+        if available_exercises == []:
+            missing.append("compatible_exercises")
+        if not selected_weekdays:
+            missing.append("training_weekdays")
+
+        return {
+            "ready": len(missing) == 0,
+            "missing": missing,
+            "checks": {
+                "api_key": has_api_key,
+                "equipment_count": equipment_count,
+                "compatible_exercises_count": len(available_exercises),
+                "training_weekdays": selected_weekdays,
+            },
+        }
 
     def generate_routine_for_user(
         self,
         user_id: int,
         training_days: int = 3,
         routine_name: Optional[str] = None,
+        training_weekdays: Optional[List[int]] = None,
         **legacy_kwargs,
     ) -> Dict:
         """Generate a complete training plan for a user."""
@@ -84,9 +199,35 @@ class RoutineGeneratorService:
             training_days = legacy_kwargs["dias_semana"]
         if "nombre_rutina" in legacy_kwargs and not routine_name:
             routine_name = legacy_kwargs["nombre_rutina"]
+        if "dias_entrenamiento" in legacy_kwargs and not training_weekdays:
+            training_weekdays = legacy_kwargs["dias_entrenamiento"]
 
         try:
             user = self._get_user_profile(user_id)
+            selected_weekdays = self._resolve_training_weekdays(
+                user=user,
+                training_days=training_days,
+                training_weekdays=training_weekdays,
+            )
+            training_days = len(selected_weekdays)
+
+            precheck = self.get_generation_precheck(
+                user_id=user_id,
+                training_days=training_days,
+                training_weekdays=selected_weekdays,
+            )
+            if not precheck["ready"]:
+                missing_map = {
+                    "api_key": _("Missing GEMINI_API_KEY configuration"),
+                    "equipment": _("No equipment selected for this user"),
+                    "compatible_exercises": _("No exercises are compatible with selected equipment"),
+                    "training_weekdays": _("No training weekdays configured"),
+                }
+                reasons = [missing_map.get(code, code) for code in precheck["missing"]]
+                raise ValueError(
+                    _("Cannot generate routine. Missing requirements: %(requirements)s")
+                    % {"requirements": ", ".join(reasons)}
+                )
 
             available_exercises = self._get_available_exercises(user)
 
@@ -125,6 +266,7 @@ class RoutineGeneratorService:
                 user=user,
                 plan_data=plan_data,
                 routine_name=routine_name or f"AI Plan - {user.get_goal_display()}",
+                selected_weekdays=selected_weekdays,
             )
 
             return {
@@ -134,19 +276,31 @@ class RoutineGeneratorService:
                 "message": _("Routine generated successfully for %(days)s days")
                 % {"days": training_days},
                 "exercises_count": result["total_exercises"],
+                "training_weekdays": selected_weekdays,
                 # Legacy keys
                 "rutina_id": result["routine_id"],
                 "mensaje": _("Routine generated successfully for %(days)s days")
                 % {"days": training_days},
                 "ejercicios_count": result["total_exercises"],
+                "dias_entrenamiento": selected_weekdays,
             }
 
         except Exception as e:
+            error_message = str(e)
+            if _is_quota_error(error_message):
+                quota_message = _format_quota_error(error_message)
+                return {
+                    "success": False,
+                    "error": f"QUOTA_EXCEEDED: {quota_message}",
+                    "message": quota_message,
+                    "mensaje": quota_message,
+                }
+
             return {
                 "success": False,
-                "error": str(e),
-                "message": _("Error generating routine: %(error)s") % {"error": str(e)},
-                "mensaje": _("Error generating routine: %(error)s") % {"error": str(e)},
+                "error": error_message,
+                "message": _("Error generating routine: %(error)s") % {"error": error_message},
+                "mensaje": _("Error generating routine: %(error)s") % {"error": error_message},
             }
 
     def _get_user_profile(self, user_id: int) -> User:
@@ -381,6 +535,8 @@ Required JSON schema:
         Logs response time for performance monitoring.
         """
         start_time = time.time()
+        if not self.model:
+            raise Exception(_("Gemini model is not initialized. Check GEMINI_API_KEY configuration."))
         
         try:
             logger.info(f"Calling Gemini API with model: {settings.GEMINI_MODEL}")
@@ -414,7 +570,7 @@ Required JSON schema:
                 f"Gemini API error after {elapsed_time:.2f}s: {error_message[:200]}"
             )
             
-            if "429" in error_message or "quota" in error_message.lower():
+            if _is_quota_error(error_message):
                 # Re-raise to trigger exponential backoff decorator
                 raise
             
@@ -594,7 +750,7 @@ Required JSON schema:
 
     @transaction.atomic
     def _create_routine_in_database(
-        self, user: User, plan_data: Dict, routine_name: str
+        self, user: User, plan_data: Dict, routine_name: str, selected_weekdays: List[int]
     ) -> Dict:
         """Create routines and weekly plans in database atomically."""
         routine = Routine.objects.create(
@@ -607,16 +763,6 @@ Required JSON schema:
         plan_ids = []
         total_exercises = 0
 
-        weekday_map = {
-            1: Weekday.MONDAY,
-            2: Weekday.TUESDAY,
-            3: Weekday.WEDNESDAY,
-            4: Weekday.THURSDAY,
-            5: Weekday.FRIDAY,
-            6: Weekday.SATURDAY,
-            7: Weekday.SUNDAY,
-        }
-
         WeeklyPlan.objects.filter(user=user).delete()
 
         weekly_plan_items = plan_data.get("weekly_plan", plan_data.get("plan_semanal", []))
@@ -624,6 +770,8 @@ Required JSON schema:
         for day_data in weekly_plan_items:
             day_number = day_data.get("day", day_data.get("dia"))
             day_exercises = day_data.get("exercises", day_data.get("ejercicios", []))
+            day_index = max(0, int(day_number or 1) - 1)
+            weekday_value = selected_weekdays[day_index]
 
             day_routine = Routine.objects.create(
                 name=day_data.get("day_name", day_data.get("nombre_dia", f"{routine_name} - Day {day_number}")),
@@ -658,7 +806,7 @@ Required JSON schema:
             plan = WeeklyPlan.objects.create(
                 user=user,
                 routine=day_routine,
-                weekday=weekday_map.get(day_number, Weekday.MONDAY),
+                weekday=weekday_value,
                 active=True,
                 notes=day_data.get("day_name", day_data.get("nombre_dia", "")),
             )
@@ -676,6 +824,7 @@ def generate_routine(
     user_id: int,
     training_days: int = 3,
     routine_name: Optional[str] = None,
+    training_weekdays: Optional[List[int]] = None,
     **legacy_kwargs,
 ) -> Dict:
     """Convenience function to generate a routine."""
@@ -683,8 +832,13 @@ def generate_routine(
         training_days = legacy_kwargs["dias_semana"]
     if "nombre_rutina" in legacy_kwargs and not routine_name:
         routine_name = legacy_kwargs["nombre_rutina"]
+    if "dias_entrenamiento" in legacy_kwargs and not training_weekdays:
+        training_weekdays = legacy_kwargs["dias_entrenamiento"]
 
     service = RoutineGeneratorService()
     return service.generate_routine_for_user(
-        user_id=user_id, training_days=training_days, routine_name=routine_name
+        user_id=user_id,
+        training_days=training_days,
+        routine_name=routine_name,
+        training_weekdays=training_weekdays,
     )
