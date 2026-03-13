@@ -10,6 +10,7 @@ Update this file as new preferences, constraints, or practices are discovered.
   - `django_project/`: Django settings and URL routing.
 - `frontend/`: React application (Vite) with authentication UI and routing.
 - `docker-compose.yml`: local development services (Django + Postgres).
+- `docker-compose.yml`: local development services (Django + Postgres + React frontend).
 - `API_DOCUMENTATION.md`, `FULL_STACK_README.md`: reference docs.
 
 ## Build, Test, and Development Commands
@@ -19,6 +20,10 @@ Backend (Docker):
 - Run migrations: `docker compose exec web python manage.py migrate`
 - Create superuser: `docker compose exec web python manage.py createsuperuser`
 - Stop services: `docker compose down`
+
+Frontend (Docker):
+- Frontend dev server is available at `http://localhost:3000` via `docker compose up -d --build`
+- Configure API base URL with `frontend/.env.development` (`VITE_API_BASE_URL`)
 
 Frontend:
 - Install dependencies: `npm install` (in `frontend/`)
