@@ -9,7 +9,6 @@ Update this file as new preferences, constraints, or practices are discovered.
   - `accounts/`: custom user model, authentication logic, serializers, views, urls.
   - `django_project/`: Django settings and URL routing.
 - `frontend/`: React application (Vite) with authentication UI and routing.
-- `docker-compose.yml`: local development services (Django + Postgres).
 - `docker-compose.yml`: local development services (Django + Postgres + React frontend).
 - `API_DOCUMENTATION.md`, `FULL_STACK_README.md`: reference docs.
 
