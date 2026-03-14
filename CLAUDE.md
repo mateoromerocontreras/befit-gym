@@ -28,6 +28,12 @@ npm install
 npm run dev
 ```
 
+Frontend (Docker, preferred local full stack):
+```bash
+docker compose up -d --build
+docker compose down
+```
+
 ## Architecture
 
 ```
@@ -40,6 +46,8 @@ frontend/
   src/services/authService.js
 docker-compose.yml
 ```
+
+Frontend API URL is configured with `VITE_API_BASE_URL` (see `frontend/.env.development`).
 
 ## Key Conventions
 

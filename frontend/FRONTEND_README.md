@@ -34,9 +34,31 @@ npm run dev
 
 The frontend will run on http://localhost:3000
 
+## Docker Development
+
+Run from the repository root:
+
+```bash
+docker compose up -d --build
+```
+
+This starts backend, database, and frontend services. The frontend runs on http://localhost:3000 with hot reload enabled.
+
+To stop:
+
+```bash
+docker compose down
+```
+
 ## Backend API
 
 Make sure the Django backend is running on http://localhost:8000
+
+The frontend API base URL is configured through Vite environment variables:
+
+- `VITE_API_BASE_URL` (default development value: `http://localhost:8000/api/auth`)
+
+See `frontend/.env.development`.
 
 ## Available Routes
 
