@@ -48,13 +48,17 @@ const ProfilePage = () => {
 
     useEffect(() => {
         if (user) {
+            // Ensure we use [1, 3, 5] if the array exists but is empty
+            const userDays = user.training_weekdays?.length > 0 ? user.training_weekdays : 
+                            (user.dias_entrenamiento?.length > 0 ? user.dias_entrenamiento : null);
+            
             setFormData({
                 edad: user.edad || '',
                 peso: user.peso || '',
                 altura: user.altura || '',
                 objetivo: user.objetivo || 'GENERAL_HEALTH',
                 nivel: user.nivel || 'BEGINNER',
-                training_weekdays: user.training_weekdays || user.dias_entrenamiento || [1, 3, 5]
+                training_weekdays: userDays || [1, 3, 5]
             });
         }
     }, [user]);
@@ -194,22 +198,7 @@ const ProfilePage = () => {
                     </div>
                 </div>
 
-                {/* Message */}
-                {message && (
-                    <div
-                        className={`mb-6 p-4 rounded-lg border flex items-center gap-3 ${message.type === 'success'
-                                ? 'bg-green-900/20 border-green-700 text-green-300'
-                                : 'bg-red-900/20 border-red-700 text-red-300'
-                            }`}
-                    >
-                        {message.type === 'success' ? (
-                            <CheckCircle className="w-5 h-5" />
-                        ) : (
-                            <AlertCircle className="w-5 h-5" />
-                        )}
-                        <span>{message.text}</span>
-                    </div>
-                )}
+
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -387,6 +376,23 @@ const ProfilePage = () => {
                             ))}
                         </div>
                     </div>
+
+                    {/* Message (Moved to bottom for visibility) */}
+                    {message && (
+                        <div
+                            className={`p-4 rounded-lg border flex items-center gap-3 ${message.type === 'success'
+                                    ? 'bg-green-900/20 border-green-700 text-green-300'
+                                    : 'bg-red-900/20 border-red-700 text-red-300'
+                                }`}
+                        >
+                            {message.type === 'success' ? (
+                                <CheckCircle className="w-5 h-5" />
+                            ) : (
+                                <AlertCircle className="w-5 h-5" />
+                            )}
+                            <span>{message.text}</span>
+                        </div>
+                    )}
 
                     {/* Submit Button */}
                     <div className="flex items-center justify-end gap-4 pt-4">

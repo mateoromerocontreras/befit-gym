@@ -90,6 +90,7 @@ class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Exercise.objects.prefetch_related("equipment").all()
     serializer_class = ExerciseSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None
 
     def get_queryset(self):
         queryset = Exercise.objects.prefetch_related("equipment").all()
@@ -151,6 +152,7 @@ class EquipmentViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Equipment.objects.all().order_by("name")
     serializer_class = EquipmentSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None
 
     def get_queryset(self):
         queryset = Equipment.objects.all().order_by("name")
@@ -209,12 +211,23 @@ class GenerateRoutineView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.warning("[GenerateRoutine] Incoming data: %s", request.data)
+
         serializer = GenerateRoutineSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            _logger.warning("[GenerateRoutine] Serializer errors: %s", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         training_days = serializer.validated_data.get("training_days", 3)
         routine_name = serializer.validated_data.get("routine_name", None)
         training_weekdays = serializer.validated_data.get("training_weekdays", None)
+
+        _logger.info(
+            "[GenerateRoutine] Validated: days=%s, name=%s, weekdays=%s",
+            training_days, routine_name, training_weekdays,
+        )
 
         try:
             generator = RoutineGeneratorService()
@@ -229,6 +242,7 @@ class GenerateRoutineView(APIView):
                 return Response(result, status=status.HTTP_201_CREATED)
             else:
                 error_text = str(result.get("error", ""))
+                _logger.warning("[GenerateRoutine] Generation failed: %s", error_text)
                 if "QUOTA_EXCEEDED" in error_text or "429" in error_text or "quota" in error_text.lower():
                     return Response(
                         {
@@ -243,8 +257,10 @@ class GenerateRoutineView(APIView):
                 )
 
         except ValueError as e:
+            _logger.warning("[GenerateRoutine] ValueError: %s", str(e))
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
+            _logger.error("[GenerateRoutine] Unexpected error: %s", str(e), exc_info=True)
             return Response(
                 {"error": _("Internal error: %(error)s") % {"error": str(e)}},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
