@@ -3,7 +3,7 @@
     "model": "accounts.equipment",
     "pk": 1,
     "fields": {
-      "name": "Barra Olímpica",
+      "name": "Olympic Barbell",
       "category": "WEIGHTS"
     }
   },
@@ -11,7 +11,7 @@
     "model": "accounts.equipment",
     "pk": 2,
     "fields": {
-      "name": "Barra Z",
+      "name": "EZ Bar",
       "category": "WEIGHTS"
     }
   },
@@ -19,7 +19,7 @@
     "model": "accounts.equipment",
     "pk": 3,
     "fields": {
-      "name": "Mancuernas",
+      "name": "Dumbbells",
       "category": "WEIGHTS"
     }
   },
@@ -27,7 +27,7 @@
     "model": "accounts.equipment",
     "pk": 4,
     "fields": {
-      "name": "Pesas Rusas (Kettlebells)",
+      "name": "Kettlebells",
       "category": "WEIGHTS"
     }
   },
@@ -35,7 +35,7 @@
     "model": "accounts.equipment",
     "pk": 5,
     "fields": {
-      "name": "Discos",
+      "name": "Weight Plates",
       "category": "WEIGHTS"
     }
   },
@@ -43,7 +43,7 @@
     "model": "accounts.equipment",
     "pk": 6,
     "fields": {
-      "name": "Prensa de Piernas",
+      "name": "Leg Press Machine",
       "category": "MACHINE"
     }
   },
@@ -51,7 +51,7 @@
     "model": "accounts.equipment",
     "pk": 7,
     "fields": {
-      "name": "Máquina de Hack Squat",
+      "name": "Hack Squat Machine",
       "category": "MACHINE"
     }
   },
@@ -59,7 +59,7 @@
     "model": "accounts.equipment",
     "pk": 8,
     "fields": {
-      "name": "Rack de Poder",
+      "name": "Power Rack",
       "category": "MACHINE"
     }
   },
@@ -67,7 +67,7 @@
     "model": "accounts.equipment",
     "pk": 9,
     "fields": {
-      "name": "Multiestación",
+      "name": "Cable Multi-Station",
       "category": "MACHINE"
     }
   },
@@ -75,7 +75,7 @@
     "model": "accounts.equipment",
     "pk": 10,
     "fields": {
-      "name": "Máquina de Extensión de Cuádriceps",
+      "name": "Leg Extension Machine",
       "category": "MACHINE"
     }
   },
@@ -83,7 +83,7 @@
     "model": "accounts.equipment",
     "pk": 11,
     "fields": {
-      "name": "Camilla de Isquios",
+      "name": "Leg Curl Machine",
       "category": "MACHINE"
     }
   },
@@ -91,7 +91,7 @@
     "model": "accounts.equipment",
     "pk": 12,
     "fields": {
-      "name": "Smith Machine (Barra Guiada)",
+      "name": "Smith Machine",
       "category": "MACHINE"
     }
   },
@@ -99,7 +99,7 @@
     "model": "accounts.equipment",
     "pk": 13,
     "fields": {
-      "name": "Polea Alta",
+      "name": "High Pulley",
       "category": "MACHINE"
     }
   },
@@ -107,7 +107,7 @@
     "model": "accounts.equipment",
     "pk": 14,
     "fields": {
-      "name": "Polea Baja",
+      "name": "Low Pulley",
       "category": "MACHINE"
     }
   },
@@ -115,7 +115,7 @@
     "model": "accounts.equipment",
     "pk": 15,
     "fields": {
-      "name": "Cruce de Poleas",
+      "name": "Cable Crossover",
       "category": "MACHINE"
     }
   },
@@ -123,7 +123,7 @@
     "model": "accounts.equipment",
     "pk": 16,
     "fields": {
-      "name": "Cinta de Correr",
+      "name": "Treadmill",
       "category": "CARDIO"
     }
   },
@@ -131,7 +131,7 @@
     "model": "accounts.equipment",
     "pk": 17,
     "fields": {
-      "name": "Bicicleta Fija",
+      "name": "Stationary Bike",
       "category": "CARDIO"
     }
   },
@@ -139,7 +139,7 @@
     "model": "accounts.equipment",
     "pk": 18,
     "fields": {
-      "name": "Bicicleta de Spinning",
+      "name": "Spin Bike",
       "category": "CARDIO"
     }
   },
@@ -147,7 +147,7 @@
     "model": "accounts.equipment",
     "pk": 19,
     "fields": {
-      "name": "Elíptica",
+      "name": "Elliptical",
       "category": "CARDIO"
     }
   },
@@ -155,7 +155,7 @@
     "model": "accounts.equipment",
     "pk": 20,
     "fields": {
-      "name": "Máquina de Remo",
+      "name": "Rowing Machine",
       "category": "CARDIO"
     }
   },
@@ -163,7 +163,7 @@
     "model": "accounts.equipment",
     "pk": 21,
     "fields": {
-      "name": "Escaladora (Stairmaster)",
+      "name": "Stairmaster",
       "category": "CARDIO"
     }
   },
@@ -171,7 +171,7 @@
     "model": "accounts.equipment",
     "pk": 22,
     "fields": {
-      "name": "Banco Plano",
+      "name": "Flat Bench",
       "category": "MACHINE"
     }
   },
@@ -179,7 +179,7 @@
     "model": "accounts.equipment",
     "pk": 23,
     "fields": {
-      "name": "Banco Inclinado",
+      "name": "Incline Bench",
       "category": "MACHINE"
     }
   },
@@ -187,7 +187,7 @@
     "model": "accounts.equipment",
     "pk": 24,
     "fields": {
-      "name": "Banco Declinado",
+      "name": "Decline Bench",
       "category": "MACHINE"
     }
   },
@@ -195,7 +195,7 @@
     "model": "accounts.equipment",
     "pk": 25,
     "fields": {
-      "name": "Banco Scott",
+      "name": "Preacher Curl Bench",
       "category": "MACHINE"
     }
   },
@@ -203,7 +203,7 @@
     "model": "accounts.equipment",
     "pk": 26,
     "fields": {
-      "name": "Barra de Dominadas",
+      "name": "Pull-up Bar",
       "category": "CALISTHENICS"
     }
   },
@@ -211,7 +211,7 @@
     "model": "accounts.equipment",
     "pk": 27,
     "fields": {
-      "name": "Barras Paralelas",
+      "name": "Parallel Bars",
       "category": "CALISTHENICS"
     }
   },
@@ -219,7 +219,7 @@
     "model": "accounts.equipment",
     "pk": 28,
     "fields": {
-      "name": "Cajón de Salto",
+      "name": "Plyo Box",
       "category": "CALISTHENICS"
     }
   },
@@ -227,7 +227,7 @@
     "model": "accounts.equipment",
     "pk": 29,
     "fields": {
-      "name": "TRX",
+      "name": "TRX Suspension Trainer",
       "category": "ACCESSORY"
     }
   },
@@ -235,7 +235,7 @@
     "model": "accounts.equipment",
     "pk": 30,
     "fields": {
-      "name": "Bandas de Resistencia",
+      "name": "Resistance Bands",
       "category": "ACCESSORY"
     }
   },
@@ -243,7 +243,7 @@
     "model": "accounts.equipment",
     "pk": 31,
     "fields": {
-      "name": "Esterilla/Mat de Yoga",
+      "name": "Yoga Mat",
       "category": "ACCESSORY"
     }
   },
@@ -251,8 +251,72 @@
     "model": "accounts.equipment",
     "pk": 32,
     "fields": {
-      "name": "Fitball",
+      "name": "Stability Ball",
       "category": "ACCESSORY"
+    }
+  },
+  {
+    "model": "accounts.equipment",
+    "pk": 33,
+    "fields": {
+      "name": "Hex Bar",
+      "category": "WEIGHTS"
+    }
+  },
+  {
+    "model": "accounts.equipment",
+    "pk": 34,
+    "fields": {
+      "name": "Medicine Ball",
+      "category": "ACCESSORY"
+    }
+  },
+  {
+    "model": "accounts.equipment",
+    "pk": 35,
+    "fields": {
+      "name": "Ab Roller",
+      "category": "ACCESSORY"
+    }
+  },
+  {
+    "model": "accounts.equipment",
+    "pk": 36,
+    "fields": {
+      "name": "Calf Raise Machine",
+      "category": "MACHINE"
+    }
+  },
+  {
+    "model": "accounts.equipment",
+    "pk": 37,
+    "fields": {
+      "name": "Lat Pulldown Machine",
+      "category": "MACHINE"
+    }
+  },
+  {
+    "model": "accounts.equipment",
+    "pk": 38,
+    "fields": {
+      "name": "Pec Deck / Fly Machine",
+      "category": "MACHINE"
+    }
+  },
+  {
+    "model": "accounts.equipment",
+    "pk": 39,
+    "fields": {
+      "name": "Foam Roller",
+      "category": "ACCESSORY"
+    }
+  },
+  {
+    "model": "accounts.equipment",
+    "pk": 40,
+    "fields": {
+      "name": "Jump Rope",
+      "category": "CARDIO"
     }
   }
 ]
